@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 31416482}
   - component: {fileID: 31416481}
   - component: {fileID: 31416480}
+  - component: {fileID: 31416484}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -163,7 +164,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 31416478}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 553f465a0d39e984aa4fa7beafe294ef, type: 3}
   m_Name: 
@@ -214,6 +215,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!114 &31416484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 31416478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f5acd3b5c855234185a626b37f649d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _dodgeTimer: 0
 --- !u!1 &41790109
 GameObject:
   m_ObjectHideFlags: 0
