@@ -258,7 +258,7 @@ public class Player : MonoBehaviour
     // --------------------------------------------------------------------------------
     //void Attack()
     //{
-    //if (Input.GetKeyDown(KeyCode.RightControl))
-    //_playerAnimation.Attack();
+        //if (Input.GetKeyDown(KeyCode.RightControl))
+            //_playerAnimation.Attack();
     //}
 }
