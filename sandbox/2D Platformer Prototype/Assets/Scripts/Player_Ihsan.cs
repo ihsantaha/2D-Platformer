@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
-public class Player : MonoBehaviour
+public class Player_Ihsan : MonoBehaviour
 {
 
     // --------------------------------------------------------------------------------
@@ -26,7 +26,6 @@ public class Player : MonoBehaviour
 
     // Status
     private bool _canRun = false;
-    private bool _grounded = false;
     private bool _ducked = false;
     private bool _canDodge = true;
     public float _dodgeTimer = 0;
@@ -36,6 +35,7 @@ public class Player : MonoBehaviour
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
+
     void Start()
     {
         _rB2D = GetComponent<Rigidbody2D>();
@@ -55,7 +55,7 @@ public class Player : MonoBehaviour
         PlayerDirection();          // 00
         Duck();                     // 01
         Jump();                     // 02
-        WalkOrRun();                // 04 - 05
+        WalkRunCrawl();                // 04 - 05
     }
 
 
@@ -63,6 +63,7 @@ public class Player : MonoBehaviour
     // --------------------------------------------------------------------------------
     // Movement
     // --------------------------------------------------------------------------------
+
     void PlayerDirection()
     {
         _direction = Input.GetAxisRaw("Horizontal");
@@ -92,7 +93,7 @@ public class Player : MonoBehaviour
             _ducked = true;
             _playerAnimation.Duck(_ducked);
         }
-        else
+        else if (!IsInCrawlSpace())
         {
             bC2DSize.y = 1;
             bC2DOffset.y = 0;
@@ -104,7 +105,7 @@ public class Player : MonoBehaviour
         }
     }
     // --------------------------------------------------------------------------------
-    void WalkOrRun()
+    void WalkRunCrawl()
 
     {
         MoveStatus();
@@ -144,74 +145,6 @@ public class Player : MonoBehaviour
         _rB2D.velocity = new Vector2(_horizontalInput * _speed, _rB2D.velocity.y);
         _playerAnimation.Move(_speed);
     }
-    // --------------------------------------------------------------------------------
-    void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
-        {
-            _rB2D.velocity = new Vector2(_rB2D.velocity.x, _jumpForce);
-            StartCoroutine(HasJumpedRoutine());
-            _playerAnimation.Jump(true);
-        }
-        _grounded = IsGrounded();
-    }
-
-    // ----------------------------------------
-    // Movement Support
-    // ----------------------------------------
-    void MoveStatus()
-    {
-        if (IsGrounded())
-        {
-            if (_hasWalked == false)
-            {
-                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-                    StartCoroutine(HasWalkedRoutine());
-            }
-            if (_hasWalked == true)
-            {
-                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-                {
-                    _canRun = true;
-                }
-            }
-        }
-        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
-            _canRun = false;
-    }
-
-    bool IsGrounded()
-    {
-        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
-        if (hitGround.collider != null)
-        {
-            if (_hasJumped == false)
-            {
-                _playerAnimation.Jump(false);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    IEnumerator HasWalkedRoutine()
-    {
-        yield return new WaitForSeconds(0.1f);
-        _hasWalked = true;
-        yield return new WaitForSeconds(0.2f);
-        _hasWalked = false;
-    }
-
-    IEnumerator HasJumpedRoutine()
-    {
-        _hasJumped = true;
-        yield return new WaitForSeconds(0.1f);
-        _hasJumped = false;
-    }
-
-    //---------------------------------------------------------------------------------
-    // Crawl
-    //---------------------------------------------------------------------------------
 
     void Crawl()
     {
@@ -228,12 +161,17 @@ public class Player : MonoBehaviour
             _playerAnimation.Move(_speed);
         }
     }
-
-
+    // --------------------------------------------------------------------------------
+    void Jump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
+        {
+            _rB2D.velocity = new Vector2(_rB2D.velocity.x, _jumpForce);
+            StartCoroutine(HasJumpedRoutine());
+            _playerAnimation.Jump(true);
+        }
+    }
     //---------------------------------------------------------------------------------
-    // Dodge
-    //---------------------------------------------------------------------------------
-
     void Dodge()
     {
         if (_canDodge == true)
@@ -254,11 +192,89 @@ public class Player : MonoBehaviour
         }
     }
     // --------------------------------------------------------------------------------
-    // Attack
-    // --------------------------------------------------------------------------------
     //void Attack()
     //{
     //if (Input.GetKeyDown(KeyCode.RightControl))
     //_playerAnimation.Attack();
     //}
+
+
+
+    // ----------------------------------------
+    // Movement Support
+    // ----------------------------------------
+
+    void MoveStatus()
+    {
+        if (IsGrounded())
+        {
+            if (_hasWalked == false)
+            {
+                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+                    StartCoroutine(HasWalkedRoutine());
+            }
+            if (_hasWalked == true)
+            {
+                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+                {
+                    _canRun = true;
+                }
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            _canRun = false;
+        }
+    }
+
+
+
+    // ----------------------------------------
+    // Raycast Status
+    // ----------------------------------------
+
+    bool IsGrounded()
+    {
+        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
+        if (hitGround.collider != null)
+        {
+            if (_hasJumped == false)
+            {
+                _playerAnimation.Jump(false);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsInCrawlSpace()
+    {
+        RaycastHit2D hitCrawlSpace = Physics2D.Raycast(transform.position, Vector2.up, 0.3f, 1 << 8);
+        if (hitCrawlSpace.collider != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    // ----------------------------------------
+    // Coroutines
+    // ----------------------------------------
+
+    IEnumerator HasWalkedRoutine()
+    {
+        yield return new WaitForSeconds(0.1f);
+        _hasWalked = true;
+        yield return new WaitForSeconds(0.2f);
+        _hasWalked = false;
+    }
+
+    IEnumerator HasJumpedRoutine()
+    {
+        _hasJumped = true;
+        yield return new WaitForSeconds(0.1f);
+        _hasJumped = false;
+    }
 }
