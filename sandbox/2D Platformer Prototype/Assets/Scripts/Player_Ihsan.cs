@@ -28,6 +28,8 @@ public class Player_Ihsan : MonoBehaviour
     private bool _canRun = false;
     private bool _ducked = false;
     private bool _canDodge = true;
+
+    public bool _canMoveBlock = false;
     public float _dodgeTimer = 0;
 
 
@@ -47,7 +49,6 @@ public class Player_Ihsan : MonoBehaviour
     void Update()
     {                               // TODOS
         Movement();                 // See Movement
-        //Attack();                   // 11
     }
 
     void Movement()
@@ -55,7 +56,8 @@ public class Player_Ihsan : MonoBehaviour
         PlayerDirection();          // 00
         Duck();                     // 01
         Jump();                     // 02
-        WalkRunCrawl();                // 04 - 05
+        WalkRunCrawl();             // 04 - 05
+        MoveBlock();
     }
 
 
@@ -191,12 +193,18 @@ public class Player_Ihsan : MonoBehaviour
             }
         }
     }
-    // --------------------------------------------------------------------------------
-    //void Attack()
-    //{
-    //if (Input.GetKeyDown(KeyCode.RightControl))
-    //_playerAnimation.Attack();
-    //}
+    //---------------------------------------------------------------------------------
+    void MoveBlock()
+    {
+        if (Input.GetKey(KeyCode.M) && IsNearBlock())
+        {
+            _canMoveBlock = true;
+        }
+        else
+        {
+            _canMoveBlock = false;
+        }
+    }
 
 
 
@@ -235,7 +243,7 @@ public class Player_Ihsan : MonoBehaviour
 
     bool IsGrounded()
     {
-        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
+        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.75f, 1 << 8 | 1 << 9);
         if (hitGround.collider != null)
         {
             if (_hasJumped == false)
@@ -251,6 +259,17 @@ public class Player_Ihsan : MonoBehaviour
     {
         RaycastHit2D hitCrawlSpace = Physics2D.Raycast(transform.position, Vector2.up, 0.3f, 1 << 8);
         if (hitCrawlSpace.collider != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool IsNearBlock()
+    {
+        RaycastHit2D hitBlockRight = Physics2D.Raycast(transform.position, Vector2.right, 0.3f, 1 << 9);
+        RaycastHit2D hitBlockLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.3f, 1 << 9);
+        if (hitBlockRight.collider != null || hitBlockLeft.collider != null)
         {
             return true;
         }
@@ -277,4 +296,5 @@ public class Player_Ihsan : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         _hasJumped = false;
     }
+
 }
