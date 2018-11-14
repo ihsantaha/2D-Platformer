@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
 
     // Status
     private bool _canRun = false;
-    private bool _grounded = false;
+    // private bool _grounded = false;
     private bool _ducked = false;
     private bool _canDodge = true;
     public float _dodgeTimer = 0;
@@ -153,7 +153,7 @@ public class Player : MonoBehaviour
             StartCoroutine(HasJumpedRoutine());
             _playerAnimation.Jump(true);
         }
-        _grounded = IsGrounded();
+        // _grounded = IsGrounded();
     }
 
     // ----------------------------------------
