@@ -28,6 +28,21 @@ public class PlayerAnimation : MonoBehaviour
             _anim.SetFloat("Move", Mathf.Abs(move));
     }
 
+    public void Dodge(bool dodge)
+    {
+        _anim.SetBool("Dodge", dodge);
+    }
+
+    public void Push(bool push)
+    {
+        _anim.SetBool("Push", push);
+    }
+
+    public void Pull(bool pull)
+    {
+        _anim.SetBool("Pull", pull);
+    }
+
     public void Attack()
     {
         _anim.SetTrigger("Attack");

@@ -125,7 +125,7 @@ GameObject:
   - component: {fileID: 31416482}
   - component: {fileID: 31416480}
   - component: {fileID: 31416484}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -213,8 +213,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f5acd3b5c855234185a626b37f649d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _animation: {fileID: 0}
   _canMoveBlock: 0
-  _dodgeTimer: 0
+  _facingRightNearBlock: 0
+  _facingLeftNearBlock: 0
+  _pullingRight: 0
+  _pullingLeft: 0
 --- !u!1 &41790109
 GameObject:
   m_ObjectHideFlags: 0
@@ -6612,7 +6616,7 @@ GameObject:
   - component: {fileID: 917023322}
   - component: {fileID: 917023323}
   - component: {fileID: 917023324}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -30074,7 +30078,7 @@ Tilemap:
       - {fileID: 21300004, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300002, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300000, guid: 87097277bcd33534c824e842d831dded, type: 3}
-      m_AnimationSpeed: 12
+      m_AnimationSpeed: 12.000001
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   - first: {x: 12, y: 1, z: 0}
