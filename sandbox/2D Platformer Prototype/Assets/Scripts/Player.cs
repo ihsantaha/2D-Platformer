@@ -63,9 +63,9 @@ public class Player : MonoBehaviour
         _gravity = -50;
     }
 
-    /**
-	 * Input Detection methods called by the PlayerInput layer
-	 */
+    // -------------------------------------------------------
+    // Input Detection methods called by the PlayerInput layer
+    // -------------------------------------------------------
     public void SetDirectionalInput(Vector2 input)
     {
         _directionalInput = input;
@@ -90,9 +90,12 @@ public class Player : MonoBehaviour
     public void OnJumpInputUp()
     {
         if (_jumpTimer != null)
+        {
             StopCoroutine(_jumpTimer);
+        }
         _playerState.jumping = false;
     }
+    // -------------------------------------------------------
 
 
     void Update()
@@ -151,7 +154,6 @@ public class Player : MonoBehaviour
             }
 
         }
-
     }
 
     void CheckVerticalCollisions()
@@ -172,7 +174,6 @@ public class Player : MonoBehaviour
             {
                 _velocity.y = 0;
             }
-
         }
 
         if (_controller._collisions.above)
@@ -185,7 +186,6 @@ public class Player : MonoBehaviour
                 _playerState.jumping = false;
             }
         }
-
     }
 
     void Move()
