@@ -9,7 +9,7 @@ public class Block : MonoBehaviour
     // --------------------------------------------------------------------------------
 
     private Rigidbody2D _rB2D;
-    private Player_Ihsan _player;
+    private OldPlayer _player;
     
 
     
@@ -19,7 +19,7 @@ public class Block : MonoBehaviour
 
     void Start () {
         _rB2D = GetComponent<Rigidbody2D>();
-        _player = GameObject.FindWithTag("Player").GetComponent<Player_Ihsan>();
+        _player = GameObject.FindWithTag("Player").GetComponent<OldPlayer>();
     }
     
 	void Update () {

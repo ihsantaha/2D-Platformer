@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
-public class Player_Ihsan : MonoBehaviour
+public class OldPlayer : MonoBehaviour
 {
     // --------------------------------------------------------------------------------
     // Properties
@@ -27,7 +27,6 @@ public class Player_Ihsan : MonoBehaviour
     // Status
     private bool _canRun = false;
     private bool _canDodge = false;
-
     private bool _ducking = false;
     private bool _interacting = false;
 
