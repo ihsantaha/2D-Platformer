@@ -152,7 +152,6 @@ public class Player : MonoBehaviour
             {
                 _timeToWallUnstick = _wallStickTime;
             }
-
         }
     }
 
@@ -208,6 +207,7 @@ public class Player : MonoBehaviour
             float runVelocity = Mathf.SmoothDamp(_velocity.x, targetVelocityX, ref _velocityXSmoothing, (_controller._collisions.below) ? _accelerationTimeGrounded : _accelerationTimeAirborne);
             _velocity.x = runVelocity;
         }
+
         _controller.Move(_velocity * Time.deltaTime, _directionalInput);
     }
 
