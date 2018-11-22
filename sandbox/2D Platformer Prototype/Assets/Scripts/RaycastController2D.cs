@@ -20,20 +20,20 @@ public class RaycastController2D : MonoBehaviour
     // Properties
     // --------------------------------------------------------------------------------
 
-    public LayerMask _collisionMask;
-    public BoxCollider2D _collider;
-    public RaycastOrigins _raycastOrigins;
+    public LayerMask collisionMask;
+    public BoxCollider2D collider;
+    public RaycastOrigins raycastOrigins;
 
-    public const float _padding = .015f;
-    const  float _dstBetweenRays = .2f;
+    public const float padding = .015f;
+    const  float dstBetweenRays = .1f;
     //[HideInInspector]
-    public int _horizontalRayCount;
+    public int horizontalRayCount;
     //[HideInInspector]
-    public int _verticalRayCount;
+    public int verticalRayCount;
     //[HideInInspector]
-    public float _horizontalRaySpacing;
+    public float horizontalRaySpacing;
     //[HideInInspector]
-    public float _verticalRaySpacing;
+    public float verticalRaySpacing;
 
 
 
@@ -43,7 +43,7 @@ public class RaycastController2D : MonoBehaviour
 
     public virtual void Awake()
     {
-        _collider = GetComponent<BoxCollider2D>();
+        collider = GetComponent<BoxCollider2D>();
     }
 
     public virtual void Start()
@@ -53,28 +53,28 @@ public class RaycastController2D : MonoBehaviour
 
     public void CalculateRaySpacing()
     {
-        Bounds bounds = _collider.bounds;
-        bounds.Expand(_padding * -2);
+        Bounds bounds = collider.bounds;
+        bounds.Expand(padding * -2);
 
         float boundsWidth = bounds.size.x;
         float boundsHeight = bounds.size.y;
 
-        _horizontalRayCount = Mathf.RoundToInt(boundsHeight / _dstBetweenRays);
-        _verticalRayCount = Mathf.RoundToInt(boundsWidth / _dstBetweenRays);
+        horizontalRayCount = Mathf.RoundToInt(boundsHeight / dstBetweenRays);
+        verticalRayCount = Mathf.RoundToInt(boundsWidth / dstBetweenRays);
 
-        _horizontalRaySpacing = boundsHeight / (_horizontalRayCount - 1);
-        _verticalRaySpacing = boundsWidth / (_verticalRayCount - 1);
+        horizontalRaySpacing = boundsHeight / (horizontalRayCount - 1);
+        verticalRaySpacing = boundsWidth / (verticalRayCount - 1);
     }
 
     // To be used by child class (Controller2D)
     public void UpdateRaycastOrigins()
     {
-        Bounds bounds = _collider.bounds;
-        bounds.Expand(_padding * -2);
+        Bounds bounds = collider.bounds;
+        bounds.Expand(padding * -2);
 
-        _raycastOrigins.bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
-        _raycastOrigins.bottomRight = new Vector2(bounds.max.x, bounds.min.y);
-        _raycastOrigins.topLeft = new Vector2(bounds.min.x, bounds.max.y);
-        _raycastOrigins.topRight = new Vector2(bounds.max.x, bounds.max.y);
+        raycastOrigins.bottomLeft = new Vector2(bounds.min.x, bounds.min.y);
+        raycastOrigins.bottomRight = new Vector2(bounds.max.x, bounds.min.y);
+        raycastOrigins.topLeft = new Vector2(bounds.min.x, bounds.max.y);
+        raycastOrigins.topRight = new Vector2(bounds.max.x, bounds.max.y);
     }
 }

@@ -125,10 +125,8 @@ GameObject:
   - component: {fileID: 31416488}
   - component: {fileID: 31416487}
   - component: {fileID: 31416486}
-  - component: {fileID: 31416485}
   - component: {fileID: 31416481}
   - component: {fileID: 31416480}
-  - component: {fileID: 31416484}
   m_Layer: 10
   m_Name: Player
   m_TagString: Player
@@ -172,7 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53c901b590b9390479e98d2dac4225d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _jumpKey: 0
+  jumpKey: 32
 --- !u!61 &31416482
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -185,7 +183,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.25}
+  m_Offset: {x: 0, y: -0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -196,37 +194,8 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.35, y: 0.5}
+  m_Size: {x: 0.35, y: 1}
   m_EdgeRadius: 0
---- !u!114 &31416484
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 31416478}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f5acd3b5c855234185a626b37f649d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _playerAnimation: {fileID: 0}
-  _canMoveBlock: 0
-  _facingRightNearBlock: 0
-  _facingLeftNearBlock: 0
-  _pullingRight: 0
-  _pullingLeft: 0
---- !u!114 &31416485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 31416478}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40ba7361929ff9a4b8362343f3299e67, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _velocity: {x: 0, y: 0}
 --- !u!114 &31416486
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,12 +207,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c17b43c14ad5efd4496070ff2446afb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _controller: {fileID: 0}
-  _wallFriction: 3
-  _wallStickTime: 0.25
-  _gravity: 0
-  _wallDirX: 0
-  _jumpCounter: 0
+  controller: {fileID: 31416487}
+  collider: {fileID: 0}
+  wallFriction: 3
+  wallStickTime: 0.25
+  gravity: 0
+  wallDirX: 0
+  jumpCounter: 0
 --- !u!114 &31416487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -255,16 +225,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84842a7f92cf5b349b23e81d8fcb229b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _collisionMask:
+  collisionMask:
     serializedVersion: 2
-    m_Bits: 0
-  _collider: {fileID: 0}
-  _horizontalRayCount: 0
-  _verticalRayCount: 0
-  _horizontalRaySpacing: 0
-  _verticalRaySpacing: 0
-  _maxSlopeAngle: 80
-  _playerInput: {x: 0, y: 0}
+    m_Bits: 256
+  collider: {fileID: 31416482}
+  horizontalRayCount: 0
+  verticalRayCount: 0
+  horizontalRaySpacing: 0
+  verticalRaySpacing: 0
+  maxSlopeAngle: 80
+  playerInput: {x: 0, y: 0}
 --- !u!114 &31416488
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -276,14 +246,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c2b8478c8a5b7a4bae1698aff77c536, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _collisionMask:
+  collisionMask:
     serializedVersion: 2
-    m_Bits: 0
-  _collider: {fileID: 0}
-  _horizontalRayCount: 0
-  _verticalRayCount: 0
-  _horizontalRaySpacing: 0
-  _verticalRaySpacing: 0
+    m_Bits: 256
+  collider: {fileID: 31416482}
+  horizontalRayCount: 0
+  verticalRayCount: 0
+  horizontalRaySpacing: 0
+  verticalRaySpacing: 0
 --- !u!1 &41790109
 GameObject:
   m_ObjectHideFlags: 0
@@ -17604,6 +17574,10 @@ Prefab:
       propertyPath: m_Constraints
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1227816034884154, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
   m_IsPrefabAsset: 0
@@ -17685,7 +17659,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1227816034884154, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 50950845781804010, guid: 7fff0db4db7105b469ad8533a0a0b382,
         type: 2}
@@ -30121,7 +30095,7 @@ Tilemap:
       - {fileID: 21300004, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300002, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300000, guid: 87097277bcd33534c824e842d831dded, type: 3}
-      m_AnimationSpeed: 12.000001
+      m_AnimationSpeed: 12
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   - first: {x: 11, y: 1, z: 0}

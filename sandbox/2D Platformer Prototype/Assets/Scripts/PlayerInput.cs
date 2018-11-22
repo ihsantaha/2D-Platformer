@@ -8,13 +8,13 @@ public class PlayerInput : MonoBehaviour
     // Properties
     // --------------------------------------------------------------------------------
 
-    Player _player;
-    KeyCode _lastKey;
-    public KeyCode _jumpKey;
+    Player player;
+    KeyCode lastKey;
+    public KeyCode jumpKey;
 
-    float _lastPressed;
-    float _cooldown;
-    private readonly float _delay = 0.2f;
+    float lastPressed;
+    float cooldown;
+    private readonly float delay = 0.2f;
 
 
 
@@ -24,22 +24,22 @@ public class PlayerInput : MonoBehaviour
 
     void Start()
     {
-        _player = GetComponent<Player>();
-        _lastPressed = -1;
+        player = GetComponent<Player>();
+        lastPressed = -1;
     }
 
     void Update()
     {
         Vector2 directionalInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        _player.SetDirectionalInput(directionalInput);
+        player.SetDirectionalInput(directionalInput);
 
-        if (Input.GetKeyDown(_jumpKey))
+        if (Input.GetKeyDown(jumpKey))
         {
-            _player.OnJumpInputDown();
+            player.OnJumpInputDown();
         }
-        if (Input.GetKeyUp(_jumpKey))
+        if (Input.GetKeyUp(jumpKey))
         {
-            _player.OnJumpInputUp();
+            player.OnJumpInputUp();
         }
     }
 
@@ -47,15 +47,15 @@ public class PlayerInput : MonoBehaviour
     {
         if (Input.GetKeyDown(key))
         {
-            if (_cooldown <= 0 && key == _lastKey && Time.time - _lastPressed <= _delay)
+            if (cooldown <= 0 && key == lastKey && Time.time - lastPressed <= delay)
             {
-                _cooldown = 0.4f;
+                cooldown = 0.4f;
                 return true;
             }
             else
             {
-                _lastKey = key;
-                _lastPressed = Time.time;
+                lastKey = key;
+                lastPressed = Time.time;
             }
         }
         return false;

@@ -4,46 +4,46 @@ using UnityEngine;
 
 public class PlayerAnimation : MonoBehaviour
 {
-    private Animator _anim;
+    private Animator anim;
 
     void Start()
     {
-        _anim = GetComponentInChildren<Animator>();
+        anim = GetComponentInChildren<Animator>();
     }
 
     public void Duck(bool duck)
     {
-        _anim.SetBool("Duck", duck);
+        anim.SetBool("Duck", duck);
     }
 
     public void Jump(bool jump)
     {
-        _anim.SetBool("Jump", jump);
+        anim.SetBool("Jump", jump);
     }
 
     public void Move(float move)
     {
-        if (_anim.gameObject.activeSelf)
-            _anim.SetFloat("Move", Mathf.Abs(move));
+        if (anim.gameObject.activeSelf)
+            anim.SetFloat("Move", Mathf.Abs(move));
     }
 
     public void Dodge(bool dodge)
     {
-        _anim.SetBool("Dodge", dodge);
+        anim.SetBool("Dodge", dodge);
     }
 
     public void Push(bool push)
     {
-        _anim.SetBool("Push", push);
+        anim.SetBool("Push", push);
     }
 
     public void Pull(bool pull)
     {
-        _anim.SetBool("Pull", pull);
+        anim.SetBool("Pull", pull);
     }
 
     public void Attack()
     {
-        _anim.SetTrigger("Attack");
+        anim.SetTrigger("Attack");
     }
 }
