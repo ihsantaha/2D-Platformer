@@ -21,7 +21,7 @@ public class RaycastController2D : MonoBehaviour
     // --------------------------------------------------------------------------------
 
     public LayerMask collisionMask;
-    public BoxCollider2D collider;
+    public BoxCollider2D boxCollider;
     public RaycastOrigins raycastOrigins;
 
     public const float padding = .015f;
@@ -43,7 +43,7 @@ public class RaycastController2D : MonoBehaviour
 
     public virtual void Awake()
     {
-        collider = GetComponent<BoxCollider2D>();
+        boxCollider = GetComponent<BoxCollider2D>();
     }
 
     public virtual void Start()
@@ -53,7 +53,7 @@ public class RaycastController2D : MonoBehaviour
 
     public void CalculateRaySpacing()
     {
-        Bounds bounds = collider.bounds;
+        Bounds bounds = boxCollider.bounds;
         bounds.Expand(padding * -2);
 
         float boundsWidth = bounds.size.x;
@@ -69,7 +69,7 @@ public class RaycastController2D : MonoBehaviour
     // To be used by child class (Controller2D)
     public void UpdateRaycastOrigins()
     {
-        Bounds bounds = collider.bounds;
+        Bounds bounds = boxCollider.bounds;
         bounds.Expand(padding * -2);
 
         raycastOrigins.bottomLeft = new Vector2(bounds.min.x, bounds.min.y);

@@ -8,13 +8,21 @@ public class PlayerInput : MonoBehaviour
     // Properties
     // --------------------------------------------------------------------------------
 
-    Player player;
-    KeyCode lastKey;
     public KeyCode jumpKey;
 
+    // --------------------------------------------------------------------------------
+    // Class Variables
+    // --------------------------------------------------------------------------------
+
+    Player player;
+    KeyCode lastKey;
     float lastPressed;
     float cooldown;
-    private readonly float delay = 0.2f;
+
+    // --------------------------------------------------------------------------------
+    // Member Variables
+    // --------------------------------------------------------------------------------
+    private readonly float _delay = 0.2f;
 
 
 
@@ -47,7 +55,7 @@ public class PlayerInput : MonoBehaviour
     {
         if (Input.GetKeyDown(key))
         {
-            if (cooldown <= 0 && key == lastKey && Time.time - lastPressed <= delay)
+            if (cooldown <= 0 && key == lastKey && Time.time - lastPressed <= _delay)
             {
                 cooldown = 0.4f;
                 return true;
