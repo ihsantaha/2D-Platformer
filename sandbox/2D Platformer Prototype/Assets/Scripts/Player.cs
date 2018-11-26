@@ -19,14 +19,12 @@ public class Player : MonoBehaviour
 
 
     // --------------------------------------------------------------------------------
-    // Properties
+    // Fields
     // --------------------------------------------------------------------------------
 
     public PlayerStates PlayerState;
 
-    // --------------------------------------------------------------------------------
     // Class Variables
-    // --------------------------------------------------------------------------------
     Animator animator;
     Controller2D controller;
 	BoxCollider2D boxCollider;
@@ -61,11 +59,6 @@ public class Player : MonoBehaviour
 
 
 
-
-
-
-
-
 	// --------------------------------------------------------------------------------
 	// Methods
 	// --------------------------------------------------------------------------------
@@ -92,7 +85,7 @@ public class Player : MonoBehaviour
 		if (wallSliding) {
 			wallJumpTimer = StartCoroutine (WallJumpRoutine ());
 		} else if (jumpCounter > 0) {
-			if (!controller.Collisions.slidingDownMaxSlope && !PlayerState.wallJumping) {
+			if (!controller.collisions.slidingDownMaxSlope && !PlayerState.wallJumping) {
 				jumpCounter--;
 				jumpTimer = StartCoroutine (JumpRoutine ());
 			}
@@ -108,7 +101,6 @@ public class Player : MonoBehaviour
 	}
 	// -------------------------------------------------------
 
-
 	void Update ()
 	{
 		CheckWallCollisions ();
@@ -120,19 +112,19 @@ public class Player : MonoBehaviour
 	void CheckWallCollisions ()
 	{
 		if (PlayerState.wallJumping) {
-			if (controller.Collisions.right && wallDirX == -1) {
+			if (controller.collisions.right && wallDirX == -1) {
 				PlayerState.wallJumping = false;
 				StopCoroutine (wallJumpTimer);
-			} else if (controller.Collisions.left && wallDirX == 1) {
+			} else if (controller.collisions.left && wallDirX == 1) {
 				PlayerState.wallJumping = false;
 				StopCoroutine (wallJumpTimer);
 			}
 		} else {
-			wallDirX = (controller.Collisions.left) ? -1 : (controller.Collisions.right) ? 1 : 0;
+			wallDirX = (controller.collisions.left) ? -1 : (controller.collisions.right) ? 1 : 0;
 		}
 
 		wallSliding = false;
-		if ((controller.Collisions.left || controller.Collisions.right) && !controller.Collisions.below && velocity.y < 0) {
+		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0) {
 			wallSliding = true;
 			if (velocity.y < -wallFriction) {
 				velocity.y = -wallFriction;
@@ -155,20 +147,20 @@ public class Player : MonoBehaviour
 
 	void CheckVerticalCollisions ()
 	{
-		if (controller.Collisions.below) {
+		if (controller.collisions.below) {
 			if (!PlayerState.jumping) {
 				jumpCounter = 2;
 			}
 
-			if (controller.Collisions.slidingDownMaxSlope) {
+			if (controller.collisions.slidingDownMaxSlope) {
 
-				velocity.y += controller.Collisions.slopeNormal.y * -gravity * Time.deltaTime;
+				velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.deltaTime;
 			} else {
 				velocity.y = 0;
 			}
 		}
 
-		if (controller.Collisions.above) {
+		if (controller.collisions.above) {
 			// Stop the jump logic immediately when the player hits a ceiling
 			velocity.y = 0;
 			if (jumpTimer != null) {
@@ -190,7 +182,7 @@ public class Player : MonoBehaviour
 			velocity = Vector2.SmoothDamp (velocity, new Vector2 (-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
 		} else {
 			velocity.y += gravity * Time.deltaTime;
-			float runVelocity = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.Collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+			float runVelocity = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
 			velocity.x = runVelocity;
 		}
 
@@ -205,7 +197,6 @@ public class Player : MonoBehaviour
 
 	public void Duck ()
 	{
-	
 		if (directionalInput.y == -1) {
 			controller.CalculateRaySpacing ();
 			if (boxCollider.offset == Vector2.zero) {
@@ -221,12 +212,8 @@ public class Player : MonoBehaviour
                 boxCollider.offset = Vector2.zero;
 			}
 
-            boxCollider.size = new Vector2 (boxCollider.size.x, colliderHeight);
-
-			
+            boxCollider.size = new Vector2 (boxCollider.size.x, colliderHeight);	
 		}
-
-	
 	}
 
 

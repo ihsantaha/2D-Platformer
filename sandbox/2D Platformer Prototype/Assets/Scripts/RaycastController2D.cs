@@ -17,7 +17,7 @@ public class RaycastController2D : MonoBehaviour
 
 
     // --------------------------------------------------------------------------------
-    // Properties
+    // Fields
     // --------------------------------------------------------------------------------
 
     public LayerMask collisionMask;
