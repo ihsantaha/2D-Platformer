@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
     // Fields
     // --------------------------------------------------------------------------------
 
-    public PlayerStates PlayerState;
+    public PlayerStates playerState;
 
     // Class Variables
     Animator animator;
@@ -85,7 +85,7 @@ public class Player : MonoBehaviour
 		if (wallSliding) {
 			wallJumpTimer = StartCoroutine (WallJumpRoutine ());
 		} else if (jumpCounter > 0) {
-			if (!controller.collisions.slidingDownMaxSlope && !PlayerState.wallJumping) {
+			if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping) {
 				jumpCounter--;
 				jumpTimer = StartCoroutine (JumpRoutine ());
 			}
@@ -97,7 +97,7 @@ public class Player : MonoBehaviour
 		if (jumpTimer != null) {
 			StopCoroutine (jumpTimer);
 		}
-		PlayerState.jumping = false;
+		playerState.jumping = false;
 	}
 	// -------------------------------------------------------
 
@@ -111,12 +111,12 @@ public class Player : MonoBehaviour
 
 	void CheckWallCollisions ()
 	{
-		if (PlayerState.wallJumping) {
+		if (playerState.wallJumping) {
 			if (controller.collisions.right && wallDirX == -1) {
-				PlayerState.wallJumping = false;
+				playerState.wallJumping = false;
 				StopCoroutine (wallJumpTimer);
 			} else if (controller.collisions.left && wallDirX == 1) {
-				PlayerState.wallJumping = false;
+				playerState.wallJumping = false;
 				StopCoroutine (wallJumpTimer);
 			}
 		} else {
@@ -148,7 +148,7 @@ public class Player : MonoBehaviour
 	void CheckVerticalCollisions ()
 	{
 		if (controller.collisions.below) {
-			if (!PlayerState.jumping) {
+			if (!playerState.jumping) {
 				jumpCounter = 2;
 			}
 
@@ -165,7 +165,7 @@ public class Player : MonoBehaviour
 			velocity.y = 0;
 			if (jumpTimer != null) {
 				StopCoroutine (jumpTimer);
-				PlayerState.jumping = false;
+				playerState.jumping = false;
 			}
 		}
 	}
@@ -176,9 +176,9 @@ public class Player : MonoBehaviour
 		float targetVelocityX = directionalInput.x * moveSpeed;
 		Vector2 smoothRef = new Vector2 (velocityXSmoothing, velocityYSmoothing);
 
-		if (PlayerState.jumping) {
+		if (playerState.jumping) {
 			velocity = Vector2.SmoothDamp (velocity, new Vector2 (targetVelocityX, 10), ref smoothRef, Time.deltaTime);
-		} else if (PlayerState.wallJumping) {
+		} else if (playerState.wallJumping) {
 			velocity = Vector2.SmoothDamp (velocity, new Vector2 (-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
 		} else {
 			velocity.y += gravity * Time.deltaTime;
@@ -192,7 +192,7 @@ public class Player : MonoBehaviour
 	public void Dash ()
 	{
 		dashSpeed = 15 * directionalInput.x;
-		PlayerState.dashing = true;
+		playerState.dashing = true;
 	}
 
 	public void Duck ()
@@ -224,15 +224,15 @@ public class Player : MonoBehaviour
 
 	IEnumerator JumpRoutine ()
 	{
-		PlayerState.jumping = true;
+		playerState.jumping = true;
 		yield return new WaitForSeconds (0.2f);
-		PlayerState.jumping = false;
+		playerState.jumping = false;
 	}
 
 	IEnumerator WallJumpRoutine ()
 	{
-		PlayerState.wallJumping = true;
+		playerState.wallJumping = true;
 		yield return new WaitForSeconds (0.25f);
-		PlayerState.wallJumping = false;
+		playerState.wallJumping = false;
 	}
 }
