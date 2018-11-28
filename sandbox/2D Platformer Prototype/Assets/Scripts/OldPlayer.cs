@@ -343,7 +343,7 @@ public class OldPlayer : MonoBehaviour
     // Coroutines & Cooldowns
     // ----------------------------------------
 
-    // CoRoutines
+    // Coroutines
     IEnumerator HasWalkedRoutine()
     {
         yield return new WaitForSeconds(0.1f);

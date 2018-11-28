@@ -207,13 +207,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c17b43c14ad5efd4496070ff2446afb2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controller: {fileID: 31416487}
-  collider: {fileID: 0}
-  wallFriction: 3
-  wallStickTime: 0.25
-  gravity: 0
-  wallDirX: 0
-  jumpCounter: 0
+  playerAnimation: {fileID: 0}
+  velocity: {x: 0, y: 0}
+  canMoveBlock: 0
+  facingRightNearBlock: 0
+  facingLeftNearBlock: 0
+  pullingRight: 0
+  pullingLeft: 0
 --- !u!114 &31416487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,13 +228,13 @@ MonoBehaviour:
   collisionMask:
     serializedVersion: 2
     m_Bits: 256
-  collider: {fileID: 31416482}
+  boxCollider: {fileID: 0}
   horizontalRayCount: 0
   verticalRayCount: 0
   horizontalRaySpacing: 0
   verticalRaySpacing: 0
-  maxSlopeAngle: 80
   playerInput: {x: 0, y: 0}
+  maxSlopeAngle: 80
 --- !u!114 &31416488
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -248,8 +248,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   collisionMask:
     serializedVersion: 2
-    m_Bits: 256
-  collider: {fileID: 31416482}
+    m_Bits: 768
+  boxCollider: {fileID: 0}
   horizontalRayCount: 0
   verticalRayCount: 0
   horizontalRaySpacing: 0
@@ -6653,7 +6653,7 @@ GameObject:
   - component: {fileID: 917023324}
   m_Layer: 10
   m_Name: Sprite
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17576,7 +17576,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1227816034884154, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1227816034884154, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
+      propertyPath: m_TagString
+      value: Ground
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
@@ -17659,12 +17663,17 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1227816034884154, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 50950845781804010, guid: 7fff0db4db7105b469ad8533a0a0b382,
         type: 2}
       propertyPath: m_Mass
       value: 1000000
+      objectReference: {fileID: 0}
+    - target: {fileID: 50950845781804010, guid: 7fff0db4db7105b469ad8533a0a0b382,
+        type: 2}
+      propertyPath: m_BodyType
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fff0db4db7105b469ad8533a0a0b382, type: 2}

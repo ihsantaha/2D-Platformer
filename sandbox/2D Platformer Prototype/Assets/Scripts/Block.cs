@@ -8,8 +8,8 @@ public class Block : MonoBehaviour
     // Fields
     // --------------------------------------------------------------------------------
 
-    private Rigidbody2D _rB2D;
-    private OldPlayer _player;
+    private Rigidbody2D rB2D;
+    private Player player;
     
 
     
@@ -17,38 +17,38 @@ public class Block : MonoBehaviour
     // Methods
     // --------------------------------------------------------------------------------
 
-    void Start () {
-        _rB2D = GetComponent<Rigidbody2D>();
-        _player = GameObject.FindWithTag("Player").GetComponent<OldPlayer>();
+    void Start() {
+        rB2D = GetComponent<Rigidbody2D>();
+        player = GameObject.FindWithTag("Player").GetComponent<Player>();
     }
     
-	void Update () {
+	void Update() {
         IsMovable();
         IsOnCliff();
     }
 
     void IsMovable()
     { 
-        if (_player._canMoveBlock && IsNearPlayer())
+        if (player.canMoveBlock && IsNearPlayer())
         {
-            _rB2D.mass = 1;
+            rB2D.mass = 1;
 
             // Move in the direction of the player if he is pulling and let the box collider naturally push him away
-            if (_player._pullingLeft || _player._pullingRight)
+            if (player.playerState.pullingLeft || player.playerState.pullingRight)
             {
-                _rB2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * 0.75f, _rB2D.velocity.y);
-                _player._playerAnimation.Pull(true);
+                rB2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * 0.75f, player.velocity.y);
+                player.playerAnimation.Pull(true);
             }
         }
         else
         {
-            _rB2D.mass = 1000000;
+            rB2D.mass = 1000000;
         }
     }
 
     void IsOnCliff()
     {
-        _rB2D.drag = IsGrounded() ? 10 : 1;
+        rB2D.drag = IsGrounded() ? 10 : 1;
     }
 
 
