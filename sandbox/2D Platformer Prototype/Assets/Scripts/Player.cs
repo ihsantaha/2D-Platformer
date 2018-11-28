@@ -195,7 +195,7 @@ public class Player : MonoBehaviour
         {
             playerSprite.flipX = true;
         }
-        else if (directionalInput.x > 0 !playerState.interacting)
+        else if (directionalInput.x > 0 && !playerState.interacting)
         {
             playerSprite.flipX = false;
         }
