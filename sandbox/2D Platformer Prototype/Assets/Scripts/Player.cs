@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Reflection;
 
 [RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour
@@ -23,6 +24,19 @@ public class Player : MonoBehaviour
         public bool facingLeftNearBlock;
         public bool pullingRight;
         public bool pullingLeft;
+
+        public object playerStateRef;
+
+        public void SetBool(string field, bool value)
+        {
+            //there is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            playerStateRef = this;
+            this.GetType().GetField(field).SetValue(playerStateRef, value);
+            this = (PlayerStates) playerStateRef;
+
+        }
+
+
     }
 
 
@@ -55,7 +69,7 @@ public class Player : MonoBehaviour
 	float minJumpVelocity;
 	float velocityXSmoothing;
 	float velocityYSmoothing;
-    float moveSpeed = 2;
+    float moveSpeed = 4;
     float dashSpeed = 30;
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
@@ -77,6 +91,8 @@ public class Player : MonoBehaviour
 
     // Block Interaction
     public bool canMoveBlock = false;
+
+
 
 
 
@@ -131,13 +147,16 @@ public class Player : MonoBehaviour
         {
             wallJumpTimer = StartCoroutine(WallJumpRoutine());
         }
-        else if (jumpCounter > 0)
+        else if (jumpCounter > 0 )
         {
             if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
             {
                 jumpCounter--;
-                jumpTimer = StartCoroutine(JumpRoutine());
+                jumpTimer = StartCoroutine(Timer(0.2f,"jumping"));
             }
+        } else if (directionalInput.y < 0)
+        {
+            Dash();
         }
     }
 
@@ -191,6 +210,10 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
+
+        playerSprite.flipX = controller.collisions.faceDir > 0 ? false : true;
+
+        /*
         if (directionalInput.x < 0 && !playerState.interacting)
         {
             playerSprite.flipX = true;
@@ -198,11 +221,12 @@ public class Player : MonoBehaviour
         else if (directionalInput.x > 0 && !playerState.interacting)
         {
             playerSprite.flipX = false;
-        }
+        }*/
     }
 
     public void Duck()
     {
+        playerAnimation.Duck(playerState.ducking);
         if (directionalInput.y == -1)
         {
             controller.CalculateRaySpacing();
@@ -212,7 +236,7 @@ public class Player : MonoBehaviour
             }
             boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight * 0.5f);
             playerState.ducking = true;
-            playerAnimation.Duck(playerState.ducking);
+           
         }
         else if (controller.CeilingCheck())
         {
@@ -221,13 +245,8 @@ public class Player : MonoBehaviour
             {
                 boxCollider.offset = Vector2.zero;
             }
-            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
-        }
-
-        if ((directionalInput.y != -1) || (playerState.jumping))
-        {
             playerState.ducking = false;
-            playerAnimation.Duck(playerState.ducking);
+            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
         }
     }
 
@@ -254,7 +273,7 @@ public class Player : MonoBehaviour
             {
                 // Crawl
                 canRun = false;
-                targetVelocityX = directionalInput.x * moveSpeed * 0.25f;
+                targetVelocityX = directionalInput.x * moveSpeed;
                 playerAnimation.Move(targetVelocityX);
             }
 
@@ -428,6 +447,8 @@ public class Player : MonoBehaviour
 
 
 
+
+
     // --------------------------------------------------------------------------------
     // Coroutines
     // --------------------------------------------------------------------------------
@@ -438,6 +459,14 @@ public class Player : MonoBehaviour
         hasWalked = true;
         yield return new WaitForSeconds(0.2f);
         hasWalked = false;
+    }
+
+
+    IEnumerator Timer(float delay,string property){
+        playerState.SetBool(property, true);
+        yield return new WaitForSeconds(delay);
+        playerState.SetBool(property, false);
+
     }
 
     IEnumerator JumpRoutine()
