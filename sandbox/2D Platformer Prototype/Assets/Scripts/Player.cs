@@ -1,264 +1,490 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
+
+[RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour
 {
+	// --------------------------------------------------------------------------------
+	// Struct
+	// --------------------------------------------------------------------------------
+
+	public struct PlayerStates
+	{
+        public bool interacting;
+        public bool walking;
+        public bool ducking;
+        public bool dashing;
+
+        public bool floating;
+		public bool jumping;
+		public bool wallJumping;
+
+        public bool facingRightNearBlock;
+        public bool facingLeftNearBlock;
+        public bool pullingRight;
+        public bool pullingLeft;
+    }
+
+
 
     // --------------------------------------------------------------------------------
-    // Properties
+    // Fields
     // --------------------------------------------------------------------------------
 
-    // Components
-    private Rigidbody2D _rB2D;
-    private BoxCollider2D _bC2D;
-    private PlayerAnimation _playerAnimation;
-    private SpriteRenderer _playerSprite;
-    private Animation _animation;
+    // Global Variables
+    public PlayerStates playerState;
+    public PlayerAnimation playerAnimation;
+    public Vector2 velocity;
 
-    // Variables
-    private float _direction;
-    private float _horizontalInput;
-    private float _speed = 2.5f;
-    private float _jumpForce = 8.5f;
+    // Class Variables
+    SpriteRenderer playerSprite;
+    Animator animator;
+    Controller2D controller;
+	BoxCollider2D boxCollider;
+
+    Vector2 directionalInput;
+    Vector2 wallVelocity;
+
+    Coroutine jumpTimer;
+    Coroutine wallJumpTimer;
+
+    float colliderHeight;
+
+	float gravity;
+    float maxJumpVelocity;
+	float minJumpVelocity;
+	float velocityXSmoothing;
+	float velocityYSmoothing;
+    float moveSpeed = 2;
+    float dashSpeed = 30;
+    float accelerationTimeAirborne = .2f;
+    float accelerationTimeGrounded = .1f;
+
+    float wallFriction = 3;
+    float wallStickTime = .25f;
+    float timeToWallUnstick;
+
+    int wallDirX;
+    int jumpCounter;
+
+    bool wallSliding;
 
     // Coroutines
-    private bool _hasWalked = false;
-    private bool _hasJumped = false;
+    bool hasWalked;
 
     // Status
-    private bool _canRun = false;
-    // private bool _grounded = false;
-    private bool _ducked = false;
-    private bool _canDodge = true;
-    public float _dodgeTimer = 0;
+    bool canRun;
+
+    // Block Interaction
+    public bool canMoveBlock = false;
 
 
 
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
+
     void Start()
-    {
-        _rB2D = GetComponent<Rigidbody2D>();
-        _bC2D = GetComponent<BoxCollider2D>();
-        _playerAnimation = GetComponent<PlayerAnimation>();
-        _playerSprite = GetComponentInChildren<SpriteRenderer>();
-    }
+	{
+        playerSprite = GetComponentInChildren<SpriteRenderer>();
+        playerAnimation = GetComponent<PlayerAnimation>();
 
-    void Update()
-    {                               // TODOS
-        Movement();                 // See Movement
-        //Attack();                   // 11
-    }
+        controller = GetComponent<Controller2D> ();
+		boxCollider = GetComponent<BoxCollider2D> ();
+		colliderHeight = boxCollider.size.y;
 
-    void Movement()
-    {
-        PlayerDirection();          // 00
-        Duck();                     // 01
-        Jump();                     // 02
-        WalkOrRun();                // 04 - 05
-    }
+        gravity = -40;
+	}
 
 
 
-    // --------------------------------------------------------------------------------
-    // Movement
-    // --------------------------------------------------------------------------------
-    void PlayerDirection()
-    {
-        _direction = Input.GetAxisRaw("Horizontal");
-        if (_direction < 0)
-        {
-            _playerSprite.flipX = true;
-        }
-        else if (_direction > 0)
-        {
-            _playerSprite.flipX = false;
-        }
-    }
-    // --------------------------------------------------------------------------------
-    void Duck()
-    {
-        // Adjust the player's box collider 2D edges accordingly
-        Vector2 bC2DSize = _bC2D.size;
-        Vector2 bC2DOffset = _bC2D.offset;
-
-        if (Input.GetKey(KeyCode.DownArrow) && IsGrounded())
-        {
-            bC2DSize.y = 0.5f;
-            bC2DOffset.y = -0.25f;
-            _bC2D.size = bC2DSize;
-            _bC2D.offset = bC2DOffset;
-
-            _ducked = true;
-            _playerAnimation.Duck(_ducked);
-        }
-        else
-        {
-            bC2DSize.y = 1;
-            bC2DOffset.y = 0;
-            _bC2D.size = bC2DSize;
-            _bC2D.offset = bC2DOffset;
-
-            _ducked = false;
-            _playerAnimation.Duck(_ducked);
-        }
-    }
-    // --------------------------------------------------------------------------------
-    void WalkOrRun()
-
-    {
+	void Update()
+	{
+        // Status
         MoveStatus();
-        _horizontalInput = Input.GetAxisRaw("Horizontal");
-        if (_ducked == false)
-        {
-            if (_canRun == false)
-            {
-                Walk();
-            }
-            else
-            {
-                Run();
-            }
 
-            if (Input.GetKeyDown(KeyCode.Z) && IsGrounded())
-            {
-                Dodge();
-            }
-        }
-        else
-        {
-            Crawl();
-        }
+        // Basic
+        PlayerDirection ();
+        Duck();
+        Move();
+
+        // Interaction
+        CheckWallCollisions();
+        CheckVerticalCollisions();
+        MoveBlock();
+
+        Debug.Log(playerState.jumping);
     }
 
-    void Walk()
-    {
-        _speed = 1f;
-        _rB2D.velocity = new Vector2(_horizontalInput * _speed, _rB2D.velocity.y);
-        _playerAnimation.Move(_horizontalInput);
-    }
 
-    void Run()
-    {
-        _speed = 3f;
-        _rB2D.velocity = new Vector2(_horizontalInput * _speed, _rB2D.velocity.y);
-        _playerAnimation.Move(_speed);
-    }
+
     // --------------------------------------------------------------------------------
-    void Jump()
+    // Input Detection methods called by the PlayerInput layer
+    // --------------------------------------------------------------------------------
+   
+    public void SetDirectionalInput(Vector2 input)
     {
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
-        {
-            _rB2D.velocity = new Vector2(_rB2D.velocity.x, _jumpForce);
-            StartCoroutine(HasJumpedRoutine());
-            _playerAnimation.Jump(true);
-        }
-        // _grounded = IsGrounded();
+        directionalInput = input;
     }
 
-    // ----------------------------------------
-    // Movement Support
-    // ----------------------------------------
+    public void OnJumpInputDown()
+    {
+        if (wallSliding)
+        {
+            wallJumpTimer = StartCoroutine(WallJumpRoutine());
+        }
+        else if (jumpCounter > 0)
+        {
+            if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
+            {
+                jumpCounter--;
+                jumpTimer = StartCoroutine(JumpRoutine());
+            }
+        }
+    }
+
+    public void OnJumpInputUp ()
+    {
+        if (jumpTimer != null)
+        {
+            StopCoroutine(jumpTimer);
+        }
+        playerState.jumping = false;
+    }
+
+
+
+    // --------------------------------------------------------------------------------
+    // Movement Status
+    // --------------------------------------------------------------------------------
+
     void MoveStatus()
     {
-        if (IsGrounded())
+        // Player will not move normally if interacting with objects
+        playerState.interacting = (playerState.facingRightNearBlock == true || playerState.facingLeftNearBlock == true);
+
+        if (controller.collisions.below)
         {
-            if (_hasWalked == false)
+            if (hasWalked == false)
             {
                 if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
                     StartCoroutine(HasWalkedRoutine());
             }
-            if (_hasWalked == true)
+            if (hasWalked == true)
             {
                 if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
                 {
-                    _canRun = true;
+                    canRun = true;
                 }
             }
         }
+
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
-            _canRun = false;
+        {
+            canRun = false;
+        }
     }
 
-    bool IsGrounded()
+
+
+    // --------------------------------------------------------------------------------
+    // Basic Movement
+    // --------------------------------------------------------------------------------
+
+    void PlayerDirection()
     {
-        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
-        if (hitGround.collider != null)
+        if (directionalInput.x < 0 && !playerState.interacting)
         {
-            if (_hasJumped == false)
+            playerSprite.flipX = true;
+        }
+        else if (directionalInput.x > 0 && !playerState.interacting)
+        {
+            playerSprite.flipX = false;
+        }
+    }
+
+    public void Duck()
+    {
+        if (directionalInput.y == -1)
+        {
+            controller.CalculateRaySpacing();
+            if (boxCollider.offset == Vector2.zero)
             {
-                _playerAnimation.Jump(false);
-                return true;
+                boxCollider.offset = boxCollider.offset + Vector2.down * colliderHeight / 4;
+            }
+            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight * 0.5f);
+            playerState.ducking = true;
+            playerAnimation.Duck(playerState.ducking);
+        }
+        else if (controller.CeilingCheck())
+        {
+            controller.CalculateRaySpacing();
+            if (boxCollider.offset != Vector2.zero)
+            {
+                boxCollider.offset = Vector2.zero;
+            }
+            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+        }
+
+        if ((directionalInput.y != -1) || (playerState.jumping))
+        {
+            playerState.ducking = false;
+            playerAnimation.Duck(playerState.ducking);
+        }
+    }
+
+    void Move()
+    {
+        float targetVelocityX;
+
+        if (!playerState.interacting)
+        {
+            if (playerState.ducking == false)
+            {
+                if (canRun == false)
+                {
+                    // Walk
+                    targetVelocityX = directionalInput.x * moveSpeed;
+                }
+                else
+                {
+                    // Run
+                    targetVelocityX = directionalInput.x * moveSpeed * 2;
+                }
+            }
+            else
+            {
+                // Crawl
+                canRun = false;
+                targetVelocityX = directionalInput.x * moveSpeed * 0.25f;
+                playerAnimation.Move(targetVelocityX);
+            }
+
+
+            // The basic forces that act upon the player, based on its state
+            Vector2 smoothRef = new Vector2(velocityXSmoothing, velocityYSmoothing);
+            playerAnimation.Move(targetVelocityX);
+
+            if (playerState.jumping)
+            {
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 10), ref smoothRef, Time.deltaTime);
+                playerAnimation.Jump(playerState.jumping);
+            }
+            else if (playerState.wallJumping)
+            {
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
+            }
+            else
+            {
+                velocity.y += gravity * Time.deltaTime;
+                float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
+                velocity.x = runVelocity;
+            }
+
+            controller.Move(velocity * Time.deltaTime, directionalInput);
+        }
+	}
+
+    public void Dash()
+    {
+        dashSpeed = 15 * directionalInput.x;
+        playerState.dashing = true;
+    }
+
+
+
+    // --------------------------------------------------------------------------------
+    // Interaction Movement
+    // --------------------------------------------------------------------------------
+
+    void CheckWallCollisions()
+    {
+        if (playerState.wallJumping)
+        {
+            if (controller.collisions.right && wallDirX == -1)
+            {
+                playerState.wallJumping = false;
+                StopCoroutine(wallJumpTimer);
+            }
+            else if (controller.collisions.left && wallDirX == 1)
+            {
+                playerState.wallJumping = false;
+                StopCoroutine(wallJumpTimer);
             }
         }
-        return false;
+        else
+        {
+            wallDirX = (controller.collisions.left) ? -1 : (controller.collisions.right) ? 1 : 0;
+        }
+
+        wallSliding = false;
+        playerAnimation.WallSlide(wallSliding);
+        if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0)
+        {
+            wallSliding = true;
+            playerAnimation.WallSlide(wallSliding);
+            if (velocity.y < -wallFriction)
+            {
+                velocity.y = -wallFriction;
+            }
+
+            if (timeToWallUnstick > 0)
+            {
+                velocityXSmoothing = 0;
+                velocity.x = 0;
+
+                if (directionalInput.x == -wallDirX)
+                {
+                    timeToWallUnstick -= Time.deltaTime;
+                }
+                else
+                {
+                    timeToWallUnstick = wallStickTime;
+                }
+            }
+            else
+            {
+                timeToWallUnstick = wallStickTime;
+            }
+        }
     }
+
+    void CheckVerticalCollisions()
+    {
+        if (controller.collisions.below)
+        {
+            if (!playerState.jumping)
+            {
+                jumpCounter = 2;
+            }
+
+            if (controller.collisions.slidingDownMaxSlope)
+            {
+                velocity.y += controller.collisions.slopeNormal.y * -gravity * Time.deltaTime;
+            }
+            else
+            {
+                velocity.y = 0;
+            }
+
+            playerAnimation.Jump(playerState.jumping);
+            playerAnimation.Fall(false);
+        }
+        else
+        {
+            playerAnimation.Fall(true);
+        }
+
+        if (controller.collisions.above)
+        {
+            // Stop the jump logic immediately when the player hits a ceiling
+            velocity.y = 0;
+            if (jumpTimer != null)
+            {
+                StopCoroutine(jumpTimer);
+                playerState.jumping = false;
+            }
+        }
+    }
+
+    void MoveBlock()
+    {
+        if (Input.GetKey(KeyCode.M) && IsNearBlock())
+        {
+            canRun = false;
+            canMoveBlock = true;
+            playerAnimation.Move(0);
+
+            if (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow))
+            {
+                playerAnimation.Push(false);
+                playerAnimation.Pull(false);
+            }
+            else if ((Input.GetKey(KeyCode.RightArrow) && playerState.facingRightNearBlock) || (Input.GetKey(KeyCode.LeftArrow) && playerState.facingLeftNearBlock))
+            {
+                // _rB2D.velocity = new Vector2(_horizontalInput * 1.25f, _rB2D.velocity.y);
+                UpdateBlockGripStatus(false, false, true);
+            }
+            else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingLeftNearBlock)
+            {
+                UpdateBlockGripStatus(true, false, false);
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingRightNearBlock)
+            {
+                UpdateBlockGripStatus(false, true, false);
+            }
+            else
+            {
+                UpdateBlockGripStatus(false, false, false);
+            }
+        }
+        else
+        {
+            canMoveBlock = false;
+            playerState.facingRightNearBlock = false;
+            playerState.facingLeftNearBlock = false;
+            playerAnimation.Pull(false);
+            UpdateBlockGripStatus(false, false, false);
+        }
+    }
+
+    void UpdateBlockGripStatus(bool pullingLeft, bool pullingRight, bool pushing)
+    {
+        playerState.pullingLeft = pullingLeft;
+        playerState.pullingRight = pullingRight;
+        playerAnimation.Push(pushing);
+    }
+
+
+
+    // --------------------------------------------------------------------------------
+    // Coroutines
+    // --------------------------------------------------------------------------------
 
     IEnumerator HasWalkedRoutine()
     {
         yield return new WaitForSeconds(0.1f);
-        _hasWalked = true;
+        hasWalked = true;
         yield return new WaitForSeconds(0.2f);
-        _hasWalked = false;
+        hasWalked = false;
     }
 
-    IEnumerator HasJumpedRoutine()
+    IEnumerator JumpRoutine()
+	{
+		playerState.jumping = true;
+		yield return new WaitForSeconds (0.2f);
+		playerState.jumping = false;
+	}
+
+	IEnumerator WallJumpRoutine()
+	{
+		playerState.wallJumping = true;
+		yield return new WaitForSeconds (0.25f);
+		playerState.wallJumping = false;
+	}
+
+
+
+    // ----------------------------------------
+    // Raycast Status
+    // ----------------------------------------
+
+    bool IsNearBlock()
     {
-        _hasJumped = true;
-        yield return new WaitForSeconds(0.1f);
-        _hasJumped = false;
+        RaycastHit2D hitBlockRight = Physics2D.Raycast(transform.position, Vector2.right, 0.3f, 1 << 9);
+        RaycastHit2D hitBlockLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.3f, 1 << 9);
+        if (hitBlockRight.collider != null)
+        {
+            playerState.facingRightNearBlock = true;
+            playerState.facingLeftNearBlock = false;
+            return true;
+        }
+        else if (hitBlockLeft.collider != null)
+        {
+            playerState.facingRightNearBlock = false;
+            playerState.facingLeftNearBlock = true;
+            return true;
+        }
+        return false;
     }
-
-    //---------------------------------------------------------------------------------
-    // Crawl
-    //---------------------------------------------------------------------------------
-
-    void Crawl()
-    {
-        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
-        {
-            _speed = 0.5f;
-            _rB2D.velocity = new Vector2(_horizontalInput * _speed, _rB2D.velocity.y);
-            _playerAnimation.Move(_speed);
-        }
-        else
-        {
-            _speed = 0;
-            _rB2D.velocity = new Vector2(_horizontalInput * _speed, _rB2D.velocity.y);
-            _playerAnimation.Move(_speed);
-        }
-    }
-
-
-    //---------------------------------------------------------------------------------
-    // Dodge
-    //---------------------------------------------------------------------------------
-
-    void Dodge()
-    {
-        if (_canDodge == true)
-        {
-            _canDodge = false;
-            _dodgeTimer = Time.time + .001f;
-            _speed = 50f;
-            _rB2D.velocity = new Vector2(_horizontalInput * _speed, 0);
-            //_playerAnimation.Move(_horizontalInput);
-
-        }
-        else
-        {
-            if (_dodgeTimer <= Time.time)
-            {
-                _canDodge = true;
-            }
-        }
-    }
-    // --------------------------------------------------------------------------------
-    // Attack
-    // --------------------------------------------------------------------------------
-    //void Attack()
-    //{
-        //if (Input.GetKeyDown(KeyCode.RightControl))
-            //_playerAnimation.Attack();
-    //}
 }

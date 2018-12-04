@@ -1,8 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
-public class Player_Ihsan : MonoBehaviour
+public class OldPlayer : MonoBehaviour
 {
-
     // --------------------------------------------------------------------------------
     // Properties
     // --------------------------------------------------------------------------------
@@ -10,9 +9,9 @@ public class Player_Ihsan : MonoBehaviour
     // Components
     private Rigidbody2D _rB2D;
     private BoxCollider2D _bC2D;
-    private PlayerAnimation _playerAnimation;
     private SpriteRenderer _playerSprite;
     private Animation _animation;
+    public PlayerAnimation _playerAnimation;
 
     // Variables
     private float _direction;
@@ -23,14 +22,20 @@ public class Player_Ihsan : MonoBehaviour
     // Coroutines
     private bool _hasWalked = false;
     private bool _hasJumped = false;
+    private bool _hasDodged = false;
 
     // Status
     private bool _canRun = false;
-    private bool _ducked = false;
-    private bool _canDodge = true;
+    private bool _canDodge = false;
+    private bool _ducking = false;
+    private bool _interacting = false;
 
+    // Block Interaction
     public bool _canMoveBlock = false;
-    public float _dodgeTimer = 0;
+    public bool _facingRightNearBlock = false;
+    public bool _facingLeftNearBlock  = false;
+    public bool _pullingRight = false;
+    public bool _pullingLeft = false;
 
 
 
@@ -47,38 +52,42 @@ public class Player_Ihsan : MonoBehaviour
     }
 
     void Update()
-    {                               // TODOS
-        Movement();                 // See Movement
+    {
+        Movement();
     }
 
     void Movement()
     {
-        PlayerDirection();          // 00
-        Duck();                     // 01
-        Jump();                     // 02
-        WalkRunCrawl();             // 04 - 05
+        // Basic
+        MoveStatus();
+        PlayerDirection();
+        Duck();
+        Jump();
+        Move();
+
+        // Interaction
         MoveBlock();
     }
 
 
 
     // --------------------------------------------------------------------------------
-    // Movement
+    // Basic Movement
     // --------------------------------------------------------------------------------
 
     void PlayerDirection()
     {
         _direction = Input.GetAxisRaw("Horizontal");
-        if (_direction < 0)
+        if (_direction < 0 && !_interacting)
         {
             _playerSprite.flipX = true;
         }
-        else if (_direction > 0)
+        else if (_direction > 0 && !_interacting)
         {
             _playerSprite.flipX = false;
         }
     }
-    // --------------------------------------------------------------------------------
+
     void Duck()
     {
         // Adjust the player's box collider 2D edges accordingly
@@ -92,8 +101,8 @@ public class Player_Ihsan : MonoBehaviour
             _bC2D.size = bC2DSize;
             _bC2D.offset = bC2DOffset;
 
-            _ducked = true;
-            _playerAnimation.Duck(_ducked);
+            _ducking = true;
+            _playerAnimation.Duck(_ducking);
         }
         else if (!IsInCrawlSpace())
         {
@@ -102,35 +111,46 @@ public class Player_Ihsan : MonoBehaviour
             _bC2D.size = bC2DSize;
             _bC2D.offset = bC2DOffset;
 
-            _ducked = false;
-            _playerAnimation.Duck(_ducked);
+            _ducking = false;
+            _playerAnimation.Duck(_ducking);
         }
     }
-    // --------------------------------------------------------------------------------
-    void WalkRunCrawl()
 
+    void Jump()
     {
-        MoveStatus();
-        _horizontalInput = Input.GetAxisRaw("Horizontal");
-        if (_ducked == false)
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
         {
-            if (_canRun == false)
+            _rB2D.velocity = new Vector2(_rB2D.velocity.x, _jumpForce);
+            StartCoroutine(HasJumpedRoutine());
+            _playerAnimation.Jump(true);
+        }
+    }
+
+    void Move()
+    {
+        _horizontalInput = Input.GetAxisRaw("Horizontal");
+        if (!_interacting)
+        {
+            if (_ducking == false)
             {
-                Walk();
-            }
+                if (_canRun == false)
+                {
+                    Walk();
+                }
+                else
+                {
+                    Run();
+                }
+
+                if (_canDodge && _hasDodged && _horizontalInput == 0)
+                {
+                    Dodge();
+                }
+            } 
             else
             {
-                Run();
+                Crawl();
             }
-
-            if (Input.GetKeyDown(KeyCode.Z) && IsGrounded())
-            {
-                Dodge();
-            }
-        }
-        else
-        {
-            Crawl();
         }
     }
 
@@ -150,6 +170,7 @@ public class Player_Ihsan : MonoBehaviour
 
     void Crawl()
     {
+        _canRun = false;
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
         {
             _speed = 0.5f;
@@ -163,46 +184,58 @@ public class Player_Ihsan : MonoBehaviour
             _playerAnimation.Move(_speed);
         }
     }
-    // --------------------------------------------------------------------------------
-    void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
-        {
-            _rB2D.velocity = new Vector2(_rB2D.velocity.x, _jumpForce);
-            StartCoroutine(HasJumpedRoutine());
-            _playerAnimation.Jump(true);
-        }
-    }
-    //---------------------------------------------------------------------------------
+    
     void Dodge()
     {
-        if (_canDodge == true)
-        {
-            _canDodge = false;
-            _dodgeTimer = Time.time + .001f;
-            _speed = 50f;
-            _rB2D.velocity = new Vector2(_horizontalInput * _speed, 0);
-            //_playerAnimation.Move(_horizontalInput);
-
-        }
-        else
-        {
-            if (_dodgeTimer <= Time.time)
-            {
-                _canDodge = true;
-            }
-        }
+        float dodgeDirection = _playerSprite.flipX ? 1 : -1;
+        _rB2D.velocity += new Vector2(5 * dodgeDirection, 0);
+        _playerAnimation.Dodge(_canDodge);
     }
-    //---------------------------------------------------------------------------------
+
+
+
+    // --------------------------------------------------------------------------------
+    // Interaction Movement
+    // --------------------------------------------------------------------------------
+
     void MoveBlock()
     {
         if (Input.GetKey(KeyCode.M) && IsNearBlock())
         {
+            _canRun = false;
             _canMoveBlock = true;
+            _playerAnimation.Move(0);
+
+            if (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow))
+            {
+                _playerAnimation.Push(false);
+                _playerAnimation.Pull(false);
+            }
+            else if ((Input.GetKey(KeyCode.RightArrow) && _facingRightNearBlock) || (Input.GetKey(KeyCode.LeftArrow) && _facingLeftNearBlock))
+            {
+                _rB2D.velocity = new Vector2(_horizontalInput * 1.25f, _rB2D.velocity.y);
+                UpdateBlockGripStatus(false, false, true);
+            }
+            else if (Input.GetKey(KeyCode.RightArrow) && _facingLeftNearBlock)
+            {
+                UpdateBlockGripStatus(true, false, false);
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow) && _facingRightNearBlock)
+            {
+                UpdateBlockGripStatus(false, true, false);
+            }
+            else
+            {
+                UpdateBlockGripStatus(false, false, false);
+            }
         }
         else
         {
             _canMoveBlock = false;
+            _facingRightNearBlock = false;
+            _facingLeftNearBlock = false;
+            _playerAnimation.Pull(false);
+            UpdateBlockGripStatus(false, false, false);
         }
     }
 
@@ -214,6 +247,9 @@ public class Player_Ihsan : MonoBehaviour
 
     void MoveStatus()
     {
+        // Player will not move normally if interacting with objects
+        _interacting = (_facingRightNearBlock == true || _facingLeftNearBlock == true);
+
         if (IsGrounded())
         {
             if (_hasWalked == false)
@@ -228,14 +264,31 @@ public class Player_Ihsan : MonoBehaviour
                     _canRun = true;
                 }
             }
+
+            if (_hasDodged == false)
+            {
+                if (Input.GetKeyDown(KeyCode.Z) && _horizontalInput == 0)
+                {
+                    StartCoroutine(HasDodgedRoutine());
+                    StartCoroutine(DodgeCooldownRoutine());
+                }
+            }
         }
+
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
         {
             _canRun = false;
         }
     }
 
-
+    void UpdateBlockGripStatus(bool pullingLeft, bool pullingRight, bool pushing)
+    {
+        _pullingLeft = pullingLeft;
+        _pullingRight = pullingRight;
+        _playerAnimation.Push(pushing);
+    }
+    
+    
 
     // ----------------------------------------
     // Raycast Status
@@ -269,8 +322,16 @@ public class Player_Ihsan : MonoBehaviour
     {
         RaycastHit2D hitBlockRight = Physics2D.Raycast(transform.position, Vector2.right, 0.3f, 1 << 9);
         RaycastHit2D hitBlockLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.3f, 1 << 9);
-        if (hitBlockRight.collider != null || hitBlockLeft.collider != null)
+        if (hitBlockRight.collider != null)
         {
+            _facingRightNearBlock = true;
+            _facingLeftNearBlock = false;
+            return true;
+        }
+        else if (hitBlockLeft.collider != null)
+        {
+            _facingRightNearBlock = false;
+            _facingLeftNearBlock  = true;
             return true;
         }
         return false;
@@ -279,9 +340,10 @@ public class Player_Ihsan : MonoBehaviour
 
 
     // ----------------------------------------
-    // Coroutines
+    // Coroutines & Cooldowns
     // ----------------------------------------
 
+    // Coroutines
     IEnumerator HasWalkedRoutine()
     {
         yield return new WaitForSeconds(0.1f);
@@ -297,4 +359,19 @@ public class Player_Ihsan : MonoBehaviour
         _hasJumped = false;
     }
 
+    IEnumerator HasDodgedRoutine()
+    {
+        _hasDodged = true;
+        yield return new WaitForSeconds(1f);
+        _hasDodged = false;
+    }
+
+    // Cooldowns
+    IEnumerator DodgeCooldownRoutine()
+    {
+        _canDodge = true;
+        yield return new WaitForSeconds(0.2f);
+        _canDodge = false;
+        _playerAnimation.Dodge(_canDodge);
+    }
 }

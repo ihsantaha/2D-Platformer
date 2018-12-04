@@ -2,17 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Block : MonoBehaviour {
-
+public class Block : MonoBehaviour
+{
     // --------------------------------------------------------------------------------
-    // Properties
+    // Fields
     // --------------------------------------------------------------------------------
 
-    // Components
-    private Rigidbody2D _rB2D;
-
-    // Status
-    private bool _isMovable;
+    private Rigidbody2D rB2D;
+    private Player player;
     
 
     
@@ -20,39 +17,38 @@ public class Block : MonoBehaviour {
     // Methods
     // --------------------------------------------------------------------------------
 
-    void Start () {
-        _rB2D = GetComponent<Rigidbody2D>();
-	}
+    void Start() {
+        rB2D = GetComponent<Rigidbody2D>();
+        player = GameObject.FindWithTag("Player").GetComponent<Player>();
+    }
     
-	void Update () {
+	void Update() {
         IsMovable();
         IsOnCliff();
-	}
+    }
 
     void IsMovable()
-    {
-        _isMovable = GameObject.FindWithTag("Player").GetComponent<Player_Ihsan>()._canMoveBlock;
-
-        if (_isMovable)
+    { 
+        if (player.canMoveBlock && IsNearPlayer())
         {
-            _rB2D.mass = 1;
+            rB2D.mass = 1;
+
+            // Move in the direction of the player if he is pulling and let the box collider naturally push him away
+            if (player.playerState.pullingLeft || player.playerState.pullingRight)
+            {
+                rB2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * 0.75f, player.velocity.y);
+                player.playerAnimation.Pull(true);
+            }
         }
         else
         {
-            _rB2D.mass = 1000000;
+            rB2D.mass = 1000000;
         }
     }
 
     void IsOnCliff()
     {
-        if (IsGrounded())
-        {
-            _rB2D.drag = 10;
-        }
-        else
-        {
-            _rB2D.drag = 1;
-        }
+        rB2D.drag = IsGrounded() ? 10 : 1;
     }
 
 
@@ -64,11 +60,13 @@ public class Block : MonoBehaviour {
     bool IsGrounded()
     {
         RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
-        if (hitGround.collider != null)
-        {
-            return true;
-        }
-        return false;
+        return hitGround.collider != null ? true : false;
     }
 
+    bool IsNearPlayer()
+    {
+        RaycastHit2D hitPlayerRight = Physics2D.Raycast(transform.position, Vector2.right, 0.55f, 1 << 10);
+        RaycastHit2D hitPlayerLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.55f, 1 << 10);
+        return (hitPlayerRight.collider != null || hitPlayerLeft.collider != null) ? true : false;
+    }
 }
