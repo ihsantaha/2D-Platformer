@@ -21,6 +21,16 @@ public class PlayerAnimation : MonoBehaviour
         anim.SetBool("Jump", jump);
     }
 
+    public void Fall(bool fall)
+    {
+        anim.SetBool("Fall", fall);
+    }
+
+    public void WallSlide(bool wallSlide)
+    {
+        anim.SetBool("WallSlide", wallSlide);
+    }
+
     public void Move(float move)
     {
         if (anim.gameObject.activeSelf)

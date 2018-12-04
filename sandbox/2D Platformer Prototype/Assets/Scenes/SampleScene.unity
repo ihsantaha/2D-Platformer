@@ -210,10 +210,6 @@ MonoBehaviour:
   playerAnimation: {fileID: 0}
   velocity: {x: 0, y: 0}
   canMoveBlock: 0
-  facingRightNearBlock: 0
-  facingLeftNearBlock: 0
-  pullingRight: 0
-  pullingLeft: 0
 --- !u!114 &31416487
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30148,7 +30144,7 @@ Tilemap:
       - {fileID: 21300004, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300002, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300000, guid: 87097277bcd33534c824e842d831dded, type: 3}
-      m_AnimationSpeed: 12
+      m_AnimationSpeed: 12.000001
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   - first: {x: 13, y: 1, z: 0}
@@ -30170,7 +30166,7 @@ Tilemap:
       - {fileID: 21300004, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300002, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300000, guid: 87097277bcd33534c824e842d831dded, type: 3}
-      m_AnimationSpeed: 12
+      m_AnimationSpeed: 12.000001
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   m_TileAssetArray:

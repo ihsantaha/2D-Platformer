@@ -112,6 +112,8 @@ public class Player : MonoBehaviour
         CheckWallCollisions();
         CheckVerticalCollisions();
         MoveBlock();
+
+        Debug.Log(playerState.jumping);
     }
 
 
@@ -316,9 +318,11 @@ public class Player : MonoBehaviour
         }
 
         wallSliding = false;
+        playerAnimation.WallSlide(wallSliding);
         if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0)
         {
             wallSliding = true;
+            playerAnimation.WallSlide(wallSliding);
             if (velocity.y < -wallFriction)
             {
                 velocity.y = -wallFriction;
@@ -364,6 +368,11 @@ public class Player : MonoBehaviour
             }
 
             playerAnimation.Jump(playerState.jumping);
+            playerAnimation.Fall(false);
+        }
+        else
+        {
+            playerAnimation.Fall(true);
         }
 
         if (controller.collisions.above)
