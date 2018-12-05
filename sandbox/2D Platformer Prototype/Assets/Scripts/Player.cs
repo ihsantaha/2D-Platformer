@@ -112,8 +112,6 @@ public class Player : MonoBehaviour
         CheckWallCollisions();
         CheckVerticalCollisions();
         MoveBlock();
-
-        Debug.Log(playerState.jumping);
     }
 
 
@@ -205,7 +203,7 @@ public class Player : MonoBehaviour
 
     public void Duck()
     {
-        if (directionalInput.y == -1)
+        if (controller.collisions.below && directionalInput.y == -1)
         {
             controller.CalculateRaySpacing();
             if (boxCollider.offset == Vector2.zero)
@@ -226,7 +224,7 @@ public class Player : MonoBehaviour
             boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
         }
 
-        if ((directionalInput.y != -1) || (playerState.jumping))
+        if ((directionalInput.y != -1) || (playerState.jumping) || !controller.collisions.below)
         {
             playerState.ducking = false;
             playerAnimation.Duck(playerState.ducking);
@@ -368,11 +366,13 @@ public class Player : MonoBehaviour
             }
 
             playerAnimation.Jump(playerState.jumping);
-            playerAnimation.Fall(false);
+            playerState.floating = false;
+            playerAnimation.Fall(playerState.floating);
         }
         else
         {
-            playerAnimation.Fall(true);
+            playerState.floating = true;
+            playerAnimation.Fall(playerState.floating);
         }
 
         if (controller.collisions.above)
