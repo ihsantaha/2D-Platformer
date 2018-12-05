@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d5751a2c961df945a34295ccf5e576d, type: 3}
+  m_Name: Ladder Brush
+  m_EditorClassIdentifier: 
+  m_Prefabs:
+  - {fileID: 1323922710652744, guid: fdf0c8551f08f8e469c3be3d9d157c33, type: 2}
+  - {fileID: 1340144251285002, guid: 8d16ae5b529e7d6429231d2460c35ab8, type: 2}
+  - {fileID: 1493512547588268, guid: 8e9153fe3951ae341b2465a0931f005e, type: 2}
+  m_PerlinScale: 0.5
+  m_Z: 0
