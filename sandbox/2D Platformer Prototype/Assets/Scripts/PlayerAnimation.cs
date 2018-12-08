@@ -15,6 +15,12 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void InCrawlSpace(bool inCrawlSpace)
+    {
+        anim.SetBool("InCrawlSpace", inCrawlSpace);
+    }
+
+
     public void Duck(bool duck)
     {
         anim.SetBool("Duck", duck);

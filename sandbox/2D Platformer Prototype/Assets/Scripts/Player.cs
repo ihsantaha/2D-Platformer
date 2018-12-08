@@ -14,7 +14,9 @@ public class Player : MonoBehaviour
 
         public bool walking;
         public bool ducking;
+        public bool crawling;
         public bool dashing;
+        public bool inCrawlSpace;
 
         public bool floating;
 		public bool jumping;
@@ -48,7 +50,6 @@ public class Player : MonoBehaviour
 
     // Class Variables
     SpriteRenderer playerSprite;
-    Animator animator;
     Controller2D controller;
 	BoxCollider2D boxCollider;
 
@@ -121,7 +122,10 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
+
+        // Raycast Status
         IsGrounded();
+        IsInCrawlSpace();
     }
 
 
@@ -195,6 +199,15 @@ public class Player : MonoBehaviour
         {
             canRun = false;
         }
+
+        if ((playerState.ducking || playerState.inCrawlSpace) && (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow)))
+        {
+            playerState.crawling = true;
+        }
+        else
+        {
+            playerState.crawling = false;
+        }
     }
 
 
@@ -254,7 +267,7 @@ public class Player : MonoBehaviour
 
         if (!interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false)
+            if (playerState.ducking == false && !playerState.inCrawlSpace)
             {
                 if (canRun == false)
                 {
@@ -448,5 +461,19 @@ public class Player : MonoBehaviour
     {
         RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
         return hitGround.collider != null ? true : false;
+    }
+
+    public void IsInCrawlSpace()
+    {
+        RaycastHit2D hitCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 8);
+        if (hitCeiling.collider != null)
+        {
+            playerState.inCrawlSpace = true;
+            playerAnimation.InCrawlSpace(playerState.inCrawlSpace);
+        } else
+        {
+            playerState.inCrawlSpace = false;
+            playerAnimation.InCrawlSpace(playerState.inCrawlSpace);
+        }
     }
 }
