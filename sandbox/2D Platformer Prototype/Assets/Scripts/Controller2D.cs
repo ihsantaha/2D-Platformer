@@ -28,7 +28,8 @@ public class Controller2D : RaycastController2D
 
 		public int faceDir;
 
-		public void Reset ()
+
+		public void Reset()
 		{
 			above = false;
 			below = false;
@@ -48,6 +49,7 @@ public class Controller2D : RaycastController2D
 
 
 
+
 	// --------------------------------------------------------------------------------
 	// Fields
 	// --------------------------------------------------------------------------------
@@ -56,8 +58,9 @@ public class Controller2D : RaycastController2D
 	public Vector2 playerInput;
     public float maxSlopeAngle = 80;
 
-
     string current = "";
+
+
 
 
     // --------------------------------------------------------------------------------
@@ -69,6 +72,7 @@ public class Controller2D : RaycastController2D
 		base.Start();
 		collisions.faceDir = 1;
 	}
+
 
 	public bool CeilingCheck()
 	{
@@ -83,10 +87,12 @@ public class Controller2D : RaycastController2D
 		return true;
 	}
 
+
 	public void Move(Vector2 moveAmount, bool standingOnPlatform)
 	{
 		Move(moveAmount, Vector2.zero, standingOnPlatform);
 	}
+
 
 	public void Move(Vector2 moveAmount, Vector2 input, bool standingOnPlatform = false)
 	{
@@ -118,6 +124,7 @@ public class Controller2D : RaycastController2D
 			collisions.below = true;
 		}
 	}
+
 
 	void Horizontalcollisions(ref Vector2 moveAmount)
 	{
@@ -152,6 +159,7 @@ public class Controller2D : RaycastController2D
 			}
 		}
 	}
+
 
 	void Verticalcollisions(ref Vector2 moveAmount)
 	{
@@ -192,6 +200,7 @@ public class Controller2D : RaycastController2D
 		}
 	}
 
+
 	void AscendSlope(ref Vector2 moveAmount, float slopeAngle, Vector2 slopeNormal)
 	{
 		float moveDistance = Mathf.Abs(moveAmount.x);
@@ -207,6 +216,7 @@ public class Controller2D : RaycastController2D
 			collisions.slopeNormal = slopeNormal;
 		}
 	}
+
 
 	void DescendSlope(ref Vector2 moveAmount)
 	{
@@ -243,6 +253,7 @@ public class Controller2D : RaycastController2D
 		}
 	}
 
+
 	void SlideDownMaxSlope(RaycastHit2D hit, ref Vector2 moveAmount)
 	{
 		if (hit) {
@@ -256,6 +267,7 @@ public class Controller2D : RaycastController2D
 			}
 		}
 	}
+
 
 	void ResetFallingThroughPlatform()
 	{

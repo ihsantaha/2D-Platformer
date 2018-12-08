@@ -5,12 +5,13 @@ using System.Collections;
 public class Player : MonoBehaviour
 {
 	// --------------------------------------------------------------------------------
-	// Struct
+	// Structs
 	// --------------------------------------------------------------------------------
 
 	public struct PlayerStates
 	{
         public bool interacting;
+
         public bool walking;
         public bool ducking;
         public bool dashing;
@@ -18,9 +19,12 @@ public class Player : MonoBehaviour
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
+    }
 
-        // Block Interaction
-        public bool isGrounded;
+
+    public struct interactionStates
+    {
+        // Block Interaction (to be used by the Block script)
         public bool facingRightNearBlock;
         public bool facingLeftNearBlock;
         public bool pushingRight;
@@ -31,12 +35,14 @@ public class Player : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Fields
     // --------------------------------------------------------------------------------
 
     // Global Variables
     public PlayerStates playerState;
+    public interactionStates interactionState;
     public PlayerAnimation playerAnimation;
     public Vector2 velocity;
 
@@ -77,10 +83,11 @@ public class Player : MonoBehaviour
     bool hasWalked;
 
     // Status
-    bool canRun;
+    public bool canRun;
 
     // Block Interaction
     public bool canMoveBlock = false;
+
 
 
 
@@ -101,7 +108,6 @@ public class Player : MonoBehaviour
 	}
 
 
-
 	void Update()
 	{
         // Status
@@ -115,9 +121,9 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
-        MoveBlock();
         IsGrounded();
     }
+
 
 
 
@@ -129,6 +135,7 @@ public class Player : MonoBehaviour
     {
         directionalInput = input;
     }
+
 
     public void OnJumpInputDown()
     {
@@ -146,6 +153,7 @@ public class Player : MonoBehaviour
         }
     }
 
+
     public void OnJumpInputUp ()
     {
         if (jumpTimer != null)
@@ -157,6 +165,7 @@ public class Player : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Movement Status
     // --------------------------------------------------------------------------------
@@ -164,7 +173,7 @@ public class Player : MonoBehaviour
     void MoveStatus()
     {
         // Player will not move normally if interacting with objects
-        playerState.interacting = (playerState.facingRightNearBlock == true || playerState.facingLeftNearBlock == true);
+        playerState.interacting = (interactionState.facingRightNearBlock == true || interactionState.facingLeftNearBlock == true);
 
         if (controller.collisions.below)
         {
@@ -190,6 +199,7 @@ public class Player : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Basic Movement
     // --------------------------------------------------------------------------------
@@ -205,6 +215,7 @@ public class Player : MonoBehaviour
             playerSprite.flipX = false;
         }
     }
+
 
     public void Duck()
     {
@@ -236,11 +247,12 @@ public class Player : MonoBehaviour
         }
     }
 
+
     void Move()
     {
         float targetVelocityX;
 
-        if (!playerState.pullingRight && !playerState.pullingLeft)
+        if (!interactionState.pullingRight && !interactionState.pullingLeft)
         {
             if (playerState.ducking == false)
             {
@@ -262,7 +274,6 @@ public class Player : MonoBehaviour
                 targetVelocityX = directionalInput.x * moveSpeed * 0.25f;
                 playerAnimation.Move(targetVelocityX);
             }
-
 
             // The basic forces that act upon the player, based on its state
             Vector2 smoothRef = new Vector2(velocityXSmoothing, velocityYSmoothing);
@@ -288,11 +299,13 @@ public class Player : MonoBehaviour
         }
 	}
 
+
     public void Dash()
     {
         dashSpeed = 15 * directionalInput.x;
         playerState.dashing = true;
     }
+
 
 
 
@@ -352,6 +365,7 @@ public class Player : MonoBehaviour
         }
     }
 
+
     void CheckVerticalCollisions()
     {
         if (controller.collisions.below)
@@ -392,59 +406,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    void MoveBlock()
-    {
-        if (Input.GetKey(KeyCode.M) && IsGrounded() && IsNearBlock())
-        {
-            canRun = false;
-            canMoveBlock = true;
-            playerAnimation.Move(0);
-
-            if ((!Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow)) || (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow)))
-            {
-                UpdateBlockGripStatus(false, false, false, false);
-                playerAnimation.Push(false);
-                playerAnimation.Pull(false);
-            }
-            else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingRightNearBlock)
-            {
-                UpdateBlockGripStatus(true, false, false, false);
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingLeftNearBlock)
-            {
-                UpdateBlockGripStatus(false, true, false, false);
-            }
-            else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingLeftNearBlock)
-            {
-                UpdateBlockGripStatus(false, false, false, true);
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingRightNearBlock)
-            {
-                UpdateBlockGripStatus(false, false, true, false);
-            }
-            else
-            {
-                UpdateBlockGripStatus(false, false, false, false);
-            }
-        }
-        else
-        {
-            canMoveBlock = false;
-            playerState.facingRightNearBlock = false;
-            playerState.facingLeftNearBlock = false;
-            UpdateBlockGripStatus(false, false, false, false);
-            playerAnimation.Push(false);
-            playerAnimation.Pull(false);
-        }
-    }
-
-    void UpdateBlockGripStatus(bool pushingRight, bool pushingLeft, bool pullingRight, bool pullingLeft)
-    {
-        playerState.pushingRight = pushingRight;
-        playerState.pushingLeft = pushingLeft;
-        playerState.pullingRight = pullingLeft;
-        playerState.pullingLeft = pullingRight;
-    }
 
 
 
@@ -460,12 +421,14 @@ public class Player : MonoBehaviour
         hasWalked = false;
     }
 
+
     IEnumerator JumpRoutine()
 	{
 		playerState.jumping = true;
 		yield return new WaitForSeconds (0.2f);
 		playerState.jumping = false;
 	}
+
 
 	IEnumerator WallJumpRoutine()
 	{
@@ -476,32 +439,14 @@ public class Player : MonoBehaviour
 
 
 
+
     // ----------------------------------------
     // Raycast Status
     // ----------------------------------------
 
-    bool IsGrounded()
+    public bool IsGrounded()
     {
         RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
         return hitGround.collider != null ? true : false;
-    }
-
-    bool IsNearBlock()
-    {
-        RaycastHit2D hitBlockRight = Physics2D.Raycast(transform.position, Vector2.right, 0.3f, 1 << 9);
-        RaycastHit2D hitBlockLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.3f, 1 << 9);
-        if (hitBlockRight.collider != null)
-        {
-            playerState.facingRightNearBlock = true;
-            playerState.facingLeftNearBlock = false;
-            return true;
-        }
-        else if (hitBlockLeft.collider != null)
-        {
-            playerState.facingRightNearBlock = false;
-            playerState.facingLeftNearBlock = true;
-            return true;
-        }
-        return false;
     }
 }
