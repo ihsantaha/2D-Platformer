@@ -21,6 +21,7 @@ public class PlayerInput : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
@@ -30,6 +31,7 @@ public class PlayerInput : MonoBehaviour
         player = GetComponent<Player>();
         lastPressed = -1;
     }
+
 
     void Update()
     {
@@ -45,6 +47,7 @@ public class PlayerInput : MonoBehaviour
             player.OnJumpInputUp();
         }
     }
+
 
     bool DoubleTap(KeyCode key)
     {
