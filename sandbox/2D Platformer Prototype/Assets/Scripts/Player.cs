@@ -16,7 +16,6 @@ public class Player : MonoBehaviour
         public bool ducking;
         public bool crawling;
         public bool dashing;
-        public bool inCrawlSpace;
 
         public bool floating;
 		public bool jumping;
@@ -143,16 +142,19 @@ public class Player : MonoBehaviour
 
     public void OnJumpInputDown()
     {
-        if (wallSliding)
+        if (!playerState.ducking && !IsInCrawlSpace())
         {
-            wallJumpTimer = StartCoroutine(WallJumpRoutine());
-        }
-        else if (jumpCounter > 0)
-        {
-            if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
+            if (wallSliding)
             {
-                jumpCounter--;
-                jumpTimer = StartCoroutine(JumpRoutine());
+                wallJumpTimer = StartCoroutine(WallJumpRoutine());
+            }
+            else if (jumpCounter > 0)
+            {
+                if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
+                {
+                    jumpCounter--;
+                    jumpTimer = StartCoroutine(JumpRoutine());
+                }
             }
         }
     }
@@ -198,15 +200,6 @@ public class Player : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
         {
             canRun = false;
-        }
-
-        if ((playerState.ducking || playerState.inCrawlSpace) && (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow)))
-        {
-            playerState.crawling = true;
-        }
-        else
-        {
-            playerState.crawling = false;
         }
     }
 
@@ -267,7 +260,7 @@ public class Player : MonoBehaviour
 
         if (!interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false && !playerState.inCrawlSpace)
+            if (playerState.ducking == false && !IsInCrawlSpace())
             {
                 if (canRun == false)
                 {
@@ -463,17 +456,16 @@ public class Player : MonoBehaviour
         return hitGround.collider != null ? true : false;
     }
 
-    public void IsInCrawlSpace()
+
+    public bool IsInCrawlSpace()
     {
         RaycastHit2D hitCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 8);
-        if (hitCeiling.collider != null)
+        if (hitCeiling.collider != null && IsGrounded())
         {
-            playerState.inCrawlSpace = true;
-            playerAnimation.InCrawlSpace(playerState.inCrawlSpace);
-        } else
-        {
-            playerState.inCrawlSpace = false;
-            playerAnimation.InCrawlSpace(playerState.inCrawlSpace);
+            playerAnimation.InCrawlSpace(true);
+            return true;
         }
+        playerAnimation.InCrawlSpace(false);
+        return false;
     }
 }
