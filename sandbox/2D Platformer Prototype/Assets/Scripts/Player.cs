@@ -19,8 +19,12 @@ public class Player : MonoBehaviour
 		public bool jumping;
 		public bool wallJumping;
 
+        // Block Interaction
+        public bool isGrounded;
         public bool facingRightNearBlock;
         public bool facingLeftNearBlock;
+        public bool pushingRight;
+        public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
     }
@@ -112,6 +116,7 @@ public class Player : MonoBehaviour
         CheckWallCollisions();
         CheckVerticalCollisions();
         MoveBlock();
+        IsGrounded();
     }
 
 
@@ -235,7 +240,7 @@ public class Player : MonoBehaviour
     {
         float targetVelocityX;
 
-        if (!playerState.interacting)
+        if (!playerState.pullingRight && !playerState.pullingLeft)
         {
             if (playerState.ducking == false)
             {
@@ -389,33 +394,37 @@ public class Player : MonoBehaviour
 
     void MoveBlock()
     {
-        if (Input.GetKey(KeyCode.M) && IsNearBlock())
+        if (Input.GetKey(KeyCode.M) && IsGrounded() && IsNearBlock())
         {
             canRun = false;
             canMoveBlock = true;
             playerAnimation.Move(0);
 
-            if (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow))
+            if ((!Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow)) || (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow)))
             {
+                UpdateBlockGripStatus(false, false, false, false);
                 playerAnimation.Push(false);
                 playerAnimation.Pull(false);
             }
-            else if ((Input.GetKey(KeyCode.RightArrow) && playerState.facingRightNearBlock) || (Input.GetKey(KeyCode.LeftArrow) && playerState.facingLeftNearBlock))
+            else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingRightNearBlock)
             {
-                // _rB2D.velocity = new Vector2(_horizontalInput * 1.25f, _rB2D.velocity.y);
-                UpdateBlockGripStatus(false, false, true);
+                UpdateBlockGripStatus(true, false, false, false);
+            }
+            else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingLeftNearBlock)
+            {
+                UpdateBlockGripStatus(false, true, false, false);
             }
             else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingLeftNearBlock)
             {
-                UpdateBlockGripStatus(true, false, false);
+                UpdateBlockGripStatus(false, false, false, true);
             }
             else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingRightNearBlock)
             {
-                UpdateBlockGripStatus(false, true, false);
+                UpdateBlockGripStatus(false, false, true, false);
             }
             else
             {
-                UpdateBlockGripStatus(false, false, false);
+                UpdateBlockGripStatus(false, false, false, false);
             }
         }
         else
@@ -423,16 +432,18 @@ public class Player : MonoBehaviour
             canMoveBlock = false;
             playerState.facingRightNearBlock = false;
             playerState.facingLeftNearBlock = false;
+            UpdateBlockGripStatus(false, false, false, false);
+            playerAnimation.Push(false);
             playerAnimation.Pull(false);
-            UpdateBlockGripStatus(false, false, false);
         }
     }
 
-    void UpdateBlockGripStatus(bool pullingLeft, bool pullingRight, bool pushing)
+    void UpdateBlockGripStatus(bool pushingRight, bool pushingLeft, bool pullingRight, bool pullingLeft)
     {
-        playerState.pullingLeft = pullingLeft;
-        playerState.pullingRight = pullingRight;
-        playerAnimation.Push(pushing);
+        playerState.pushingRight = pushingRight;
+        playerState.pushingLeft = pushingLeft;
+        playerState.pullingRight = pullingLeft;
+        playerState.pullingLeft = pullingRight;
     }
 
 
@@ -468,6 +479,12 @@ public class Player : MonoBehaviour
     // ----------------------------------------
     // Raycast Status
     // ----------------------------------------
+
+    bool IsGrounded()
+    {
+        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
+        return hitGround.collider != null ? true : false;
+    }
 
     bool IsNearBlock()
     {

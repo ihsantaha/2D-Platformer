@@ -10,6 +10,8 @@ public class Block : MonoBehaviour
 
     private Rigidbody2D rB2D;
     private Player player;
+
+    bool inAir;
     
 
     
@@ -25,30 +27,58 @@ public class Block : MonoBehaviour
 	void Update() {
         IsMovable();
         IsOnCliff();
+
+        Debug.Log(transform.rotation.z);
+        if (!IsGrounded())
+        {
+            inAir = true;
+        }
+
+        if (inAir)
+        {
+            if (IsGrounded())
+            {
+                StartCoroutine(HasLandedRoutine());
+                inAir = false;
+            }
+        }
     }
 
     void IsMovable()
     { 
         if (player.canMoveBlock && IsNearPlayer())
         {
-            rB2D.mass = 1;
+            if ((Input.GetKey(KeyCode.M) && (player.playerState.pushingRight || player.playerState.pushingLeft)) || !IsGrounded())
+            {
+                player.playerAnimation.Push(true);
+                rB2D.bodyType = RigidbodyType2D.Dynamic;
+            }
+            else if (IsGrounded())
+            {
+                rB2D.bodyType = RigidbodyType2D.Kinematic;
+            }
 
             // Move in the direction of the player if he is pulling and let the box collider naturally push him away
             if (player.playerState.pullingLeft || player.playerState.pullingRight)
             {
-                rB2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * 0.75f, player.velocity.y);
+                // rB2D.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * 0.75f, rB2D.velocity.y);
+                transform.Translate(Input.GetAxisRaw("Horizontal") * 0.01f, 0, 0);
+                player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.01f, 0, 0);
                 player.playerAnimation.Pull(true);
             }
-        }
-        else
-        {
-            rB2D.mass = 1000000;
         }
     }
 
     void IsOnCliff()
     {
         rB2D.drag = IsGrounded() ? 10 : 1;
+    }
+
+    IEnumerator HasLandedRoutine()
+    {
+        yield return new WaitForSeconds(1);
+        rB2D.bodyType = RigidbodyType2D.Kinematic;
+        transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0, 0);
     }
 
 
