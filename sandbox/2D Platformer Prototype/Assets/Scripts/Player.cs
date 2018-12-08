@@ -22,7 +22,7 @@ public class Player : MonoBehaviour
     }
 
 
-    public struct interactionStates
+    public struct InteractionStates
     {
         // Block Interaction (to be used by the Block script)
         public bool facingRightNearBlock;
@@ -42,7 +42,7 @@ public class Player : MonoBehaviour
 
     // Global Variables
     public PlayerStates playerState;
-    public interactionStates interactionState;
+    public InteractionStates interactionState;
     public PlayerAnimation playerAnimation;
     public Vector2 velocity;
 
