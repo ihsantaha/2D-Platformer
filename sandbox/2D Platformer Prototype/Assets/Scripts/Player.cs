@@ -165,13 +165,10 @@ public class Player : MonoBehaviour
 
     public void OnJumpInputDown()
     {
-
         if (!playerState.ducking && !IsInCrawlSpace())
-
         {
             if (wallSliding)
             {
-
                 wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
             else if (jumpCounter > 0)
@@ -182,7 +179,6 @@ public class Player : MonoBehaviour
                     jumpTimer = StartCoroutine(Timer(0.2f,"jumping"));
                
                 }
-
             }
         } else
         {
