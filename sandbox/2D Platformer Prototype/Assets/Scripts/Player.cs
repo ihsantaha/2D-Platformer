@@ -26,11 +26,10 @@ public class Player : MonoBehaviour
 
         public void SetBool(string field, bool value)
         {
-            //there is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
             playerStateRef = this;
             this.GetType().GetField(field).SetValue(playerStateRef, value);
            this = (PlayerStates)playerStateRef;
-
         }
     }
 
@@ -49,14 +48,12 @@ public class Player : MonoBehaviour
 
         public void SetBool(string field, bool value)
         {
-            //there is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
             playerStateRef = this;
             this.GetType().GetField(field).SetValue(playerStateRef, value);
             playerStateRef = (PlayerStates) playerStateRef;
 
         }
-
-
     }
 
 
@@ -246,24 +243,12 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-
-        playerSprite.flipX = controller.collisions.faceDir ==1 ? false : true;
-
-        /*
-        if (directionalInput.x < 0 && !playerState.interacting)
-        {
-            playerSprite.flipX = true;
-        }
-        else if (directionalInput.x > 0 && !playerState.interacting)
-        {
-            playerSprite.flipX = false;
-        }*/
+        playerSprite.flipX = controller.collisions.faceDir == 1 ? false : true;
     }
 
 
     public void Duck()
     {
-
         if (controller.collisions.below && directionalInput.y == -1)
         {
             controller.CalculateRaySpacing();
@@ -273,7 +258,7 @@ public class Player : MonoBehaviour
             }
             boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight * 0.5f);
             playerState.ducking = true;
-           
+            playerAnimation.Duck(playerState.ducking);        
         }
         else if (controller.CeilingCheck() && !playerState.dashing)
         {
@@ -287,13 +272,11 @@ public class Player : MonoBehaviour
 
             if ((directionalInput.y != -1) || (playerState.jumping) || !controller.collisions.below)
             {
-                playerState.ducking = false;
                 boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+                playerState.ducking = false;
+                playerAnimation.Duck(playerState.ducking);
             }
-
         }
-
-   
     }
 
 
