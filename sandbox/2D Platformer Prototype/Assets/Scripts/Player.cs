@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Reflection;
 
 [RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour
@@ -20,6 +21,16 @@ public class Player : MonoBehaviour
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
+
+        public object playerStateRef;
+
+        public void SetBool(string field, bool value)
+        {
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            playerStateRef = this;
+            this.GetType().GetField(field).SetValue(playerStateRef, value);
+           this = (PlayerStates)playerStateRef;
+        }
     }
 
 
@@ -32,6 +43,17 @@ public class Player : MonoBehaviour
         public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
+
+        public object playerStateRef;
+
+        public void SetBool(string field, bool value)
+        {
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            playerStateRef = this;
+            this.GetType().GetField(field).SetValue(playerStateRef, value);
+            playerStateRef = (PlayerStates) playerStateRef;
+
+        }
     }
 
 
@@ -65,7 +87,7 @@ public class Player : MonoBehaviour
 	float minJumpVelocity;
 	float velocityXSmoothing;
 	float velocityYSmoothing;
-    float moveSpeed = 2;
+    float moveSpeed = 4;
     float dashSpeed = 30;
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
@@ -87,6 +109,7 @@ public class Player : MonoBehaviour
 
     // Block Interaction
     public bool canMoveBlock = false;
+
 
 
 
@@ -153,9 +176,13 @@ public class Player : MonoBehaviour
                 if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
                 {
                     jumpCounter--;
-                    jumpTimer = StartCoroutine(JumpRoutine());
+                    jumpTimer = StartCoroutine(Timer(0.2f,"jumping"));
+               
                 }
             }
+        } else
+        {
+            StartCoroutine(Timer(0.2f, "dashing"));
         }
     }
 
@@ -212,14 +239,7 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-        if (directionalInput.x < 0 && !playerState.interacting)
-        {
-            playerSprite.flipX = true;
-        }
-        else if (directionalInput.x > 0 && !playerState.interacting)
-        {
-            playerSprite.flipX = false;
-        }
+        playerSprite.flipX = controller.collisions.faceDir == 1 ? false : true;
     }
 
 
@@ -234,22 +254,24 @@ public class Player : MonoBehaviour
             }
             boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight * 0.5f);
             playerState.ducking = true;
-            playerAnimation.Duck(playerState.ducking);
+            playerAnimation.Duck(playerState.ducking);        
         }
-        else if (controller.CeilingCheck())
+        else if (controller.CeilingCheck() && !playerState.dashing)
         {
             controller.CalculateRaySpacing();
             if (boxCollider.offset != Vector2.zero)
             {
                 boxCollider.offset = Vector2.zero;
             }
-            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
-        }
 
-        if ((directionalInput.y != -1) || (playerState.jumping) || !controller.collisions.below)
-        {
-            playerState.ducking = false;
-            playerAnimation.Duck(playerState.ducking);
+            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+
+            if ((directionalInput.y != -1) || (playerState.jumping) || !controller.collisions.below)
+            {
+                boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+                playerState.ducking = false;
+                playerAnimation.Duck(playerState.ducking);
+            }
         }
     }
 
@@ -277,7 +299,7 @@ public class Player : MonoBehaviour
             {
                 // Crawl
                 canRun = false;
-                targetVelocityX = directionalInput.x * moveSpeed * 0.25f;
+                targetVelocityX = directionalInput.x * moveSpeed;
                 playerAnimation.Move(targetVelocityX);
             }
 
@@ -294,6 +316,9 @@ public class Player : MonoBehaviour
             {
                 velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
             }
+            else if (playerState.dashing) {
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir*15, velocity.y), ref smoothRef, Time.deltaTime);
+            }
             else
             {
                 velocity.y += gravity * Time.deltaTime;
@@ -305,12 +330,6 @@ public class Player : MonoBehaviour
         }
 	}
 
-
-    public void Dash()
-    {
-        dashSpeed = 15 * directionalInput.x;
-        playerState.dashing = true;
-    }
 
 
 
@@ -415,6 +434,8 @@ public class Player : MonoBehaviour
 
 
 
+
+
     // --------------------------------------------------------------------------------
     // Coroutines
     // --------------------------------------------------------------------------------
@@ -427,6 +448,12 @@ public class Player : MonoBehaviour
         hasWalked = false;
     }
 
+    IEnumerator Timer(float delay,string property){
+        playerState.SetBool(property, true);
+        yield return new WaitForSeconds(delay);
+        playerState.SetBool(property, false);
+
+    }
 
     IEnumerator JumpRoutine()
 	{
