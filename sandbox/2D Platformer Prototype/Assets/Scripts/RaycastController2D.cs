@@ -16,6 +16,7 @@ public class RaycastController2D : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Fields
     // --------------------------------------------------------------------------------
@@ -37,6 +38,7 @@ public class RaycastController2D : MonoBehaviour
 
 
 
+
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
@@ -46,10 +48,12 @@ public class RaycastController2D : MonoBehaviour
         boxCollider = GetComponent<BoxCollider2D>();
     }
 
+
     public virtual void Start()
     {
         CalculateRaySpacing();
     }
+
 
     public void CalculateRaySpacing()
     {
@@ -65,6 +69,7 @@ public class RaycastController2D : MonoBehaviour
         horizontalRaySpacing = boundsHeight / (horizontalRayCount - 1);
         verticalRaySpacing = boundsWidth / (verticalRayCount - 1);
     }
+
 
     // To be used by child class (Controller2D)
     public void UpdateRaycastOrigins()
