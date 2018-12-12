@@ -21,6 +21,7 @@ public class Player : MonoBehaviour
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
+        public bool climbing;
 
         public object playerStateRef;
 
@@ -43,6 +44,7 @@ public class Player : MonoBehaviour
         public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
+        public bool canClimb;
 
         public object playerStateRef;
 
@@ -146,6 +148,7 @@ public class Player : MonoBehaviour
         CheckVerticalCollisions();
 
         // Raycast Status
+        Climb();
         IsGrounded();
         IsInCrawlSpace();
     }
@@ -197,8 +200,6 @@ public class Player : MonoBehaviour
     }
 
 
-
-
     // --------------------------------------------------------------------------------
     // Movement Status
     // --------------------------------------------------------------------------------
@@ -229,8 +230,6 @@ public class Player : MonoBehaviour
             canRun = false;
         }
     }
-
-
 
 
     // --------------------------------------------------------------------------------
@@ -316,8 +315,32 @@ public class Player : MonoBehaviour
             {
                 velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
             }
-            else if (playerState.dashing) {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir*15, velocity.y), ref smoothRef, Time.deltaTime);
+            else if (playerState.dashing)
+            {
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 15, velocity.y), ref smoothRef, Time.deltaTime);
+            }
+            else if (playerState.climbing && CanClimb())
+            {
+                if (Input.GetKeyUp("space") || Input.GetKey("space"))
+                {
+                    playerState.climbing = false;
+                    playerState.jumping = true;
+                }
+                else if (Input.GetKey("up"))
+                {
+                    velocity.y = 5;
+                    velocity.x = 0;
+                }
+                else if (Input.GetKey("down"))
+                {
+                    velocity.y = -5;
+                    velocity.x = 0;
+                }
+                else
+                {
+                    velocity.y = 0;
+                    velocity.x = 0;
+                }
             }
             else
             {
@@ -329,8 +352,6 @@ public class Player : MonoBehaviour
             controller.Move(velocity * Time.deltaTime, directionalInput);
         }
 	}
-
-
 
 
 
@@ -430,12 +451,7 @@ public class Player : MonoBehaviour
             }
         }
     }
-
-
-
-
-
-
+  
     // --------------------------------------------------------------------------------
     // Coroutines
     // --------------------------------------------------------------------------------
@@ -483,6 +499,27 @@ public class Player : MonoBehaviour
         return hitGround.collider != null ? true : false;
     }
 
+    public void Climb()
+    {
+        if (CanClimb() && Input.GetKeyDown("up"))
+        {
+            playerState.climbing = true;
+        }
+    }
+
+    bool CanClimb()
+    {
+        RaycastHit2D hitClimbRight = Physics2D.Raycast(transform.position, Vector2.right, 0.01f, 1 << 11);
+        RaycastHit2D hitClimbLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.01f, 1 << 11);
+
+        if(hitClimbLeft.collider != null && hitClimbRight.collider != null)
+        { 
+            return true;
+        }
+
+        playerState.climbing = false;
+        return false;
+    }
 
     public bool IsInCrawlSpace()
     {
@@ -495,4 +532,4 @@ public class Player : MonoBehaviour
         playerAnimation.InCrawlSpace(false);
         return false;
     }
-}
+ }
