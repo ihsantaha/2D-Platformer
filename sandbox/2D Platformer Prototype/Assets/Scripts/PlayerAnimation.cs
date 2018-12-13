@@ -15,6 +15,13 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    // ** Reusable Test Method using Slide as the first test subject** //
+    public void SetBool(string property, bool value)
+    {
+        anim.SetBool(property, value);
+    }
+
+
     public void InCrawlSpace(bool inCrawlSpace)
     {
         anim.SetBool("InCrawlSpace", inCrawlSpace);

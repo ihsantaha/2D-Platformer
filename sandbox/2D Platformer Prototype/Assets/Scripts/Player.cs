@@ -54,7 +54,6 @@ public class Player : MonoBehaviour
             playerStateRef = this;
             this.GetType().GetField(field).SetValue(playerStateRef, value);
             playerStateRef = (PlayerStates) playerStateRef;
-
         }
     }
 
@@ -179,13 +178,12 @@ public class Player : MonoBehaviour
                 if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
                 {
                     jumpCounter--;
-                    jumpTimer = StartCoroutine(Timer(0.2f,"jumping"));
-               
+                    jumpTimer = StartCoroutine(Timer(0.2f, "jumping", null));    
                 }
             }
         } else
         {
-            StartCoroutine(Timer(0.2f, "dashing"));
+            StartCoroutine(Timer(0.2f, "dashing", "Slide"));
         }
     }
 
@@ -464,11 +462,12 @@ public class Player : MonoBehaviour
         hasWalked = false;
     }
 
-    IEnumerator Timer(float delay,string property){
+    IEnumerator Timer(float delay,string property, string animation){
         playerState.SetBool(property, true);
+        playerAnimation.SetBool(animation, true);
         yield return new WaitForSeconds(delay);
         playerState.SetBool(property, false);
-
+        playerAnimation.SetBool(animation, false);
     }
 
     IEnumerator JumpRoutine()
