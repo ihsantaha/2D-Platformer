@@ -38,31 +38,47 @@ public class Block : MonoBehaviour
 
     void IsMovable()
     {
-        if (player.canMoveBlock && IsNearPlayer())
+        if (!IsGrounded())
         {
-            if ((Input.GetKey(KeyCode.M) && (player.interactionState.pushingRight || player.interactionState.pushingLeft)) || !IsGrounded())
+            rB2D.bodyType = RigidbodyType2D.Dynamic;
+        }
+        else
+        {
+            rB2D.bodyType = RigidbodyType2D.Static;
+        }
+
+        if (player.canMoveBlock && IsNearPlayer() && IsGrounded())
+        {
+            // if ((Input.GetKey(KeyCode.M) && (player.interactionState.pushingRight || player.interactionState.pushingLeft)) || !IsGrounded())
+            // {
+            //    rB2D.bodyType = RigidbodyType2D.Dynamic;
+            //    player.playerAnimation.Push(true);
+            // }
+
+            if (player.interactionState.pushingLeft || player.interactionState.pushingRight)
             {
-                rB2D.bodyType = RigidbodyType2D.Dynamic;
+                transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
+                player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
                 player.playerAnimation.Push(true);
             }
 
             if (player.interactionState.pullingLeft || player.interactionState.pullingRight)
             {
-                transform.Translate(Input.GetAxisRaw("Horizontal") * 0.01f, 0, 0);
-                player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.01f, 0, 0);
+                transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
+                player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
                 player.playerAnimation.Pull(true);
             }
         }
-        else if (IsNearPlayer())
-        {
-            rB2D.bodyType = RigidbodyType2D.Kinematic;
-        }
+        // else if (IsNearPlayer())
+        // {
+        //     rB2D.bodyType = RigidbodyType2D.Kinematic;
+        // }
     }
 
 
     void IsOnCliff()
     {
-        rB2D.drag = IsGrounded() ? 10 : 1;
+        rB2D.drag = IsGrounded() ? 10 : 0;
     }
 
 
@@ -148,8 +164,9 @@ public class Block : MonoBehaviour
 
     IEnumerator HasLandedRoutine()
     {
-        yield return new WaitForSeconds(1);
-        rB2D.bodyType = RigidbodyType2D.Kinematic;
+        yield return new WaitForSeconds(0.25f);
+        rB2D.bodyType = RigidbodyType2D.Static;
+        rB2D.velocity = new Vector2(0, 0);
         transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0, 0);
     }
 

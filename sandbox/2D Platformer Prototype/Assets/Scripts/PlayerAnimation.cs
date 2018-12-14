@@ -15,19 +15,6 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
-    // ** Reusable Test Method using Slide as the first test subject** //
-    public void SetBool(string property, bool value)
-    {
-        anim.SetBool(property, value);
-    }
-
-
-    public void InCrawlSpace(bool inCrawlSpace)
-    {
-        anim.SetBool("InCrawlSpace", inCrawlSpace);
-    }
-
-
     public void Duck(bool duck)
     {
         anim.SetBool("Duck", duck);
@@ -46,16 +33,16 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
-    public void WallSlide(bool wallSlide)
-    {
-        anim.SetBool("WallSlide", wallSlide);
-    }
-
-
     public void Move(float move)
     {
         if (anim.gameObject.activeSelf)
             anim.SetFloat("Move", Mathf.Abs(move));
+    }
+
+
+    public void Slide(bool value)
+    {
+        anim.SetBool("Slide", value);
     }
 
 
@@ -64,6 +51,24 @@ public class PlayerAnimation : MonoBehaviour
         anim.SetBool("Dodge", dodge);
     }
 
+
+    public void InCrawlSpace(bool inCrawlSpace)
+    {
+        anim.SetBool("InCrawlSpace", inCrawlSpace);
+    }
+
+
+    public void WallSlide(bool wallSlide)
+    {
+        anim.SetBool("WallSlide", wallSlide);
+    }
+
+
+    public void Climb(bool climb, int speed = 1)
+    {
+        anim.SetBool("Climb", climb);
+        anim.speed = speed;
+    }
 
     public void Push(bool push)
     {

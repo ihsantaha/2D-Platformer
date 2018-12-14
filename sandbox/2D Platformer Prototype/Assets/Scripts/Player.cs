@@ -145,11 +145,12 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
+        CheckStartClimb();
 
         // Raycast Status
-        Climb();
         IsGrounded();
         IsInCrawlSpace();
+        IsInClimbableSpace();
     }
 
 
@@ -178,12 +179,12 @@ public class Player : MonoBehaviour
                 if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
                 {
                     jumpCounter--;
-                    jumpTimer = StartCoroutine(Timer(0.2f, "jumping", null));    
+                    jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));    
                 }
             }
         } else
         {
-            StartCoroutine(Timer(0.2f, "dashing", "Slide"));
+            StartCoroutine(Timer(0.2f, "dashing"));
         }
     }
 
@@ -195,6 +196,7 @@ public class Player : MonoBehaviour
             StopCoroutine(jumpTimer);
         }
         playerState.jumping = false;
+
     }
 
 
@@ -236,7 +238,14 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-        playerSprite.flipX = controller.collisions.faceDir == 1 ? false : true;
+        if (!playerState.interacting && Input.GetAxisRaw("Horizontal") < 0)
+        {
+            playerSprite.flipX = true;
+        }
+        else if (!playerState.interacting && Input.GetAxisRaw("Horizontal") > 0)
+        {
+            playerSprite.flipX = false;
+        }
     }
 
 
@@ -315,30 +324,12 @@ public class Player : MonoBehaviour
             }
             else if (playerState.dashing)
             {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 15, velocity.y), ref smoothRef, Time.deltaTime);
+                // Slide
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 10, velocity.y), ref smoothRef, Time.deltaTime);
             }
-            else if (playerState.climbing && CanClimb())
+            else if (playerState.climbing && IsInClimbableSpace())
             {
-                if (Input.GetKeyUp("space") || Input.GetKey("space"))
-                {
-                    playerState.climbing = false;
-                    playerState.jumping = true;
-                }
-                else if (Input.GetKey("up"))
-                {
-                    velocity.y = 5;
-                    velocity.x = 0;
-                }
-                else if (Input.GetKey("down"))
-                {
-                    velocity.y = -5;
-                    velocity.x = 0;
-                }
-                else
-                {
-                    velocity.y = 0;
-                    velocity.x = 0;
-                }
+                Climb();
             }
             else
             {
@@ -350,6 +341,40 @@ public class Player : MonoBehaviour
             controller.Move(velocity * Time.deltaTime, directionalInput);
         }
 	}
+
+    public void Climb()
+    {
+        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
+        {
+            playerState.climbing = false;
+            playerState.jumping = true;
+        }
+        else if (Input.GetKey(KeyCode.UpArrow))
+        {
+            velocity.y = 2;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing);
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            velocity.y = -2;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing);
+
+            if (IsGrounded())
+            {
+                playerState.climbing = false;
+                playerAnimation.Climb(playerState.climbing);
+            }
+        }
+        else
+        {
+            velocity.y = 0;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing, 0);
+        }
+    }
+
 
 
 
@@ -449,7 +474,19 @@ public class Player : MonoBehaviour
             }
         }
     }
-  
+
+
+    public void CheckStartClimb()
+    {
+        if (IsInClimbableSpace() && Input.GetKeyDown("up"))
+        {
+            playerState.climbing = true;
+        }
+    }
+
+
+
+
     // --------------------------------------------------------------------------------
     // Coroutines
     // --------------------------------------------------------------------------------
@@ -462,12 +499,21 @@ public class Player : MonoBehaviour
         hasWalked = false;
     }
 
-    IEnumerator Timer(float delay,string property, string animation){
+    IEnumerator Timer(float delay,string property){
         playerState.SetBool(property, true);
-        playerAnimation.SetBool(animation, true);
+
+        if (property == "dashing")
+        {
+            playerAnimation.Slide(true);
+        }
+
         yield return new WaitForSeconds(delay);
         playerState.SetBool(property, false);
-        playerAnimation.SetBool(animation, false);
+
+        if (property == "dashing")
+        {
+            playerAnimation.Slide(false);
+        }     
     }
 
     IEnumerator JumpRoutine()
@@ -495,30 +541,10 @@ public class Player : MonoBehaviour
     public bool IsGrounded()
     {
         RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
-        return hitGround.collider != null ? true : false;
+        RaycastHit2D hitBlock = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 9);
+        return hitGround.collider!= null || hitBlock.collider != null ? true : false;
     }
 
-    public void Climb()
-    {
-        if (CanClimb() && Input.GetKeyDown("up"))
-        {
-            playerState.climbing = true;
-        }
-    }
-
-    bool CanClimb()
-    {
-        RaycastHit2D hitClimbRight = Physics2D.Raycast(transform.position, Vector2.right, 0.01f, 1 << 11);
-        RaycastHit2D hitClimbLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.01f, 1 << 11);
-
-        if(hitClimbLeft.collider != null && hitClimbRight.collider != null)
-        { 
-            return true;
-        }
-
-        playerState.climbing = false;
-        return false;
-    }
 
     public bool IsInCrawlSpace()
     {
@@ -531,4 +557,20 @@ public class Player : MonoBehaviour
         playerAnimation.InCrawlSpace(false);
         return false;
     }
- }
+
+
+    public bool IsInClimbableSpace()
+    {
+        RaycastHit2D hitClimbRight = Physics2D.Raycast(transform.position, Vector2.right, 0.1f, 1 << 11);
+        RaycastHit2D hitClimbLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.1f, 1 << 11);
+
+        if (hitClimbLeft.collider != null && hitClimbRight.collider != null)
+        {
+            return true;
+        }
+
+        playerState.climbing = false;
+        playerAnimation.Climb(playerState.climbing);
+        return false;
+    }
+}
