@@ -6,30 +6,32 @@ public class PlayerAnimation : MonoBehaviour
 {
     private Animator anim;
 
+
+
+
     void Start()
     {
         anim = GetComponentInChildren<Animator>();
     }
+
 
     public void Duck(bool duck)
     {
         anim.SetBool("Duck", duck);
     }
 
+
     public void Jump(bool jump)
     {
         anim.SetBool("Jump", jump);
     }
+
 
     public void Fall(bool fall)
     {
         anim.SetBool("Fall", fall);
     }
 
-    public void WallSlide(bool wallSlide)
-    {
-        anim.SetBool("WallSlide", wallSlide);
-    }
 
     public void Move(float move)
     {
@@ -37,9 +39,35 @@ public class PlayerAnimation : MonoBehaviour
             anim.SetFloat("Move", Mathf.Abs(move));
     }
 
+
+    public void Slide(bool value)
+    {
+        anim.SetBool("Slide", value);
+    }
+
+
     public void Dodge(bool dodge)
     {
         anim.SetBool("Dodge", dodge);
+    }
+
+
+    public void InCrawlSpace(bool inCrawlSpace)
+    {
+        anim.SetBool("InCrawlSpace", inCrawlSpace);
+    }
+
+
+    public void WallSlide(bool wallSlide)
+    {
+        anim.SetBool("WallSlide", wallSlide);
+    }
+
+
+    public void Climb(bool climb, int speed = 1)
+    {
+        anim.SetBool("Climb", climb);
+        anim.speed = speed;
     }
 
     public void Push(bool push)
@@ -47,10 +75,12 @@ public class PlayerAnimation : MonoBehaviour
         anim.SetBool("Push", push);
     }
 
+
     public void Pull(bool pull)
     {
         anim.SetBool("Pull", pull);
     }
+
 
     public void Attack()
     {

@@ -1,29 +1,62 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Reflection;
 
 [RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour
 {
 	// --------------------------------------------------------------------------------
-	// Struct
+	// Structs
 	// --------------------------------------------------------------------------------
 
 	public struct PlayerStates
 	{
         public bool interacting;
+
         public bool walking;
         public bool ducking;
+        public bool crawling;
         public bool dashing;
 
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
+        public bool climbing;
 
+        public object playerStateRef;
+
+        public void SetBool(string field, bool value)
+        {
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            playerStateRef = this;
+            this.GetType().GetField(field).SetValue(playerStateRef, value);
+           this = (PlayerStates)playerStateRef;
+        }
+    }
+
+
+    public struct InteractionStates
+    {
+        // Block Interaction (to be used by the Block script)
         public bool facingRightNearBlock;
         public bool facingLeftNearBlock;
+        public bool pushingRight;
+        public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
+        public bool canClimb;
+
+        public object playerStateRef;
+
+        public void SetBool(string field, bool value)
+        {
+            // There is no way to make .SetValue work on a reference of a Struct, so we must box it into an object
+            playerStateRef = this;
+            this.GetType().GetField(field).SetValue(playerStateRef, value);
+            playerStateRef = (PlayerStates) playerStateRef;
+        }
     }
+
 
 
 
@@ -33,12 +66,12 @@ public class Player : MonoBehaviour
 
     // Global Variables
     public PlayerStates playerState;
+    public InteractionStates interactionState;
     public PlayerAnimation playerAnimation;
     public Vector2 velocity;
 
     // Class Variables
     SpriteRenderer playerSprite;
-    Animator animator;
     Controller2D controller;
 	BoxCollider2D boxCollider;
 
@@ -55,7 +88,7 @@ public class Player : MonoBehaviour
 	float minJumpVelocity;
 	float velocityXSmoothing;
 	float velocityYSmoothing;
-    float moveSpeed = 2;
+    float moveSpeed = 4;
     float dashSpeed = 30;
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
@@ -73,10 +106,12 @@ public class Player : MonoBehaviour
     bool hasWalked;
 
     // Status
-    bool canRun;
+    public bool canRun;
 
     // Block Interaction
     public bool canMoveBlock = false;
+
+
 
 
 
@@ -97,7 +132,6 @@ public class Player : MonoBehaviour
 	}
 
 
-
 	void Update()
 	{
         // Status
@@ -111,10 +145,14 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
-        MoveBlock();
+        CheckStartClimb();
 
-        Debug.Log(playerState.jumping);
+        // Raycast Status
+        IsGrounded();
+        IsInCrawlSpace();
+        IsInClimbableSpace();
     }
+
 
 
 
@@ -127,21 +165,29 @@ public class Player : MonoBehaviour
         directionalInput = input;
     }
 
+
     public void OnJumpInputDown()
     {
-        if (wallSliding)
+        if (!playerState.ducking && !IsInCrawlSpace())
         {
-            wallJumpTimer = StartCoroutine(WallJumpRoutine());
-        }
-        else if (jumpCounter > 0)
-        {
-            if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
+            if (wallSliding)
             {
-                jumpCounter--;
-                jumpTimer = StartCoroutine(JumpRoutine());
+                wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
+            else if (jumpCounter > 0)
+            {
+                if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
+                {
+                    jumpCounter--;
+                    jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));    
+                }
+            }
+        } else
+        {
+            StartCoroutine(Timer(0.2f, "dashing"));
         }
     }
+
 
     public void OnJumpInputUp ()
     {
@@ -150,8 +196,8 @@ public class Player : MonoBehaviour
             StopCoroutine(jumpTimer);
         }
         playerState.jumping = false;
-    }
 
+    }
 
 
     // --------------------------------------------------------------------------------
@@ -161,7 +207,7 @@ public class Player : MonoBehaviour
     void MoveStatus()
     {
         // Player will not move normally if interacting with objects
-        playerState.interacting = (playerState.facingRightNearBlock == true || playerState.facingLeftNearBlock == true);
+        playerState.interacting = (interactionState.facingRightNearBlock == true || interactionState.facingLeftNearBlock == true);
 
         if (controller.collisions.below)
         {
@@ -186,26 +232,26 @@ public class Player : MonoBehaviour
     }
 
 
-
     // --------------------------------------------------------------------------------
     // Basic Movement
     // --------------------------------------------------------------------------------
 
     void PlayerDirection()
     {
-        if (directionalInput.x < 0 && !playerState.interacting)
+        if (!playerState.interacting && Input.GetAxisRaw("Horizontal") < 0)
         {
             playerSprite.flipX = true;
         }
-        else if (directionalInput.x > 0 && !playerState.interacting)
+        else if (!playerState.interacting && Input.GetAxisRaw("Horizontal") > 0)
         {
             playerSprite.flipX = false;
         }
     }
 
+
     public void Duck()
     {
-        if (directionalInput.y == -1)
+        if (controller.collisions.below && directionalInput.y == -1)
         {
             controller.CalculateRaySpacing();
             if (boxCollider.offset == Vector2.zero)
@@ -214,32 +260,35 @@ public class Player : MonoBehaviour
             }
             boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight * 0.5f);
             playerState.ducking = true;
-            playerAnimation.Duck(playerState.ducking);
+            playerAnimation.Duck(playerState.ducking);        
         }
-        else if (controller.CeilingCheck())
+        else if (controller.CeilingCheck() && !playerState.dashing)
         {
             controller.CalculateRaySpacing();
             if (boxCollider.offset != Vector2.zero)
             {
                 boxCollider.offset = Vector2.zero;
             }
-            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
-        }
 
-        if ((directionalInput.y != -1) || (playerState.jumping))
-        {
-            playerState.ducking = false;
-            playerAnimation.Duck(playerState.ducking);
+            boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+
+            if ((directionalInput.y != -1) || (playerState.jumping) || !controller.collisions.below)
+            {
+                boxCollider.size = new Vector2(boxCollider.size.x, colliderHeight);
+                playerState.ducking = false;
+                playerAnimation.Duck(playerState.ducking);
+            }
         }
     }
+
 
     void Move()
     {
         float targetVelocityX;
 
-        if (!playerState.interacting)
+        if (!interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false)
+            if (playerState.ducking == false && !IsInCrawlSpace())
             {
                 if (canRun == false)
                 {
@@ -256,10 +305,9 @@ public class Player : MonoBehaviour
             {
                 // Crawl
                 canRun = false;
-                targetVelocityX = directionalInput.x * moveSpeed * 0.25f;
+                targetVelocityX = directionalInput.x * moveSpeed;
                 playerAnimation.Move(targetVelocityX);
             }
-
 
             // The basic forces that act upon the player, based on its state
             Vector2 smoothRef = new Vector2(velocityXSmoothing, velocityYSmoothing);
@@ -274,6 +322,15 @@ public class Player : MonoBehaviour
             {
                 velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
             }
+            else if (playerState.dashing)
+            {
+                // Slide
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 10, velocity.y), ref smoothRef, Time.deltaTime);
+            }
+            else if (playerState.climbing && IsInClimbableSpace())
+            {
+                Climb();
+            }
             else
             {
                 velocity.y += gravity * Time.deltaTime;
@@ -285,11 +342,39 @@ public class Player : MonoBehaviour
         }
 	}
 
-    public void Dash()
+    public void Climb()
     {
-        dashSpeed = 15 * directionalInput.x;
-        playerState.dashing = true;
+        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
+        {
+            playerState.climbing = false;
+            playerState.jumping = true;
+        }
+        else if (Input.GetKey(KeyCode.UpArrow))
+        {
+            velocity.y = 2;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing);
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            velocity.y = -2;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing);
+
+            if (IsGrounded())
+            {
+                playerState.climbing = false;
+                playerAnimation.Climb(playerState.climbing);
+            }
+        }
+        else
+        {
+            velocity.y = 0;
+            velocity.x = 0;
+            playerAnimation.Climb(playerState.climbing, 0);
+        }
     }
+
 
 
 
@@ -349,6 +434,7 @@ public class Player : MonoBehaviour
         }
     }
 
+
     void CheckVerticalCollisions()
     {
         if (controller.collisions.below)
@@ -368,11 +454,13 @@ public class Player : MonoBehaviour
             }
 
             playerAnimation.Jump(playerState.jumping);
-            playerAnimation.Fall(false);
+            playerState.floating = false;
+            playerAnimation.Fall(playerState.floating);
         }
         else
         {
-            playerAnimation.Fall(true);
+            playerState.floating = true;
+            playerAnimation.Fall(playerState.floating);
         }
 
         if (controller.collisions.above)
@@ -387,53 +475,15 @@ public class Player : MonoBehaviour
         }
     }
 
-    void MoveBlock()
-    {
-        if (Input.GetKey(KeyCode.M) && IsNearBlock())
-        {
-            canRun = false;
-            canMoveBlock = true;
-            playerAnimation.Move(0);
 
-            if (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.LeftArrow))
-            {
-                playerAnimation.Push(false);
-                playerAnimation.Pull(false);
-            }
-            else if ((Input.GetKey(KeyCode.RightArrow) && playerState.facingRightNearBlock) || (Input.GetKey(KeyCode.LeftArrow) && playerState.facingLeftNearBlock))
-            {
-                // _rB2D.velocity = new Vector2(_horizontalInput * 1.25f, _rB2D.velocity.y);
-                UpdateBlockGripStatus(false, false, true);
-            }
-            else if (Input.GetKey(KeyCode.RightArrow) && playerState.facingLeftNearBlock)
-            {
-                UpdateBlockGripStatus(true, false, false);
-            }
-            else if (Input.GetKey(KeyCode.LeftArrow) && playerState.facingRightNearBlock)
-            {
-                UpdateBlockGripStatus(false, true, false);
-            }
-            else
-            {
-                UpdateBlockGripStatus(false, false, false);
-            }
-        }
-        else
+    public void CheckStartClimb()
+    {
+        if (IsInClimbableSpace() && Input.GetKeyDown("up"))
         {
-            canMoveBlock = false;
-            playerState.facingRightNearBlock = false;
-            playerState.facingLeftNearBlock = false;
-            playerAnimation.Pull(false);
-            UpdateBlockGripStatus(false, false, false);
+            playerState.climbing = true;
         }
     }
 
-    void UpdateBlockGripStatus(bool pullingLeft, bool pullingRight, bool pushing)
-    {
-        playerState.pullingLeft = pullingLeft;
-        playerState.pullingRight = pullingRight;
-        playerAnimation.Push(pushing);
-    }
 
 
 
@@ -449,12 +499,30 @@ public class Player : MonoBehaviour
         hasWalked = false;
     }
 
+    IEnumerator Timer(float delay,string property){
+        playerState.SetBool(property, true);
+
+        if (property == "dashing")
+        {
+            playerAnimation.Slide(true);
+        }
+
+        yield return new WaitForSeconds(delay);
+        playerState.SetBool(property, false);
+
+        if (property == "dashing")
+        {
+            playerAnimation.Slide(false);
+        }     
+    }
+
     IEnumerator JumpRoutine()
 	{
 		playerState.jumping = true;
 		yield return new WaitForSeconds (0.2f);
 		playerState.jumping = false;
 	}
+
 
 	IEnumerator WallJumpRoutine()
 	{
@@ -465,26 +533,44 @@ public class Player : MonoBehaviour
 
 
 
+
     // ----------------------------------------
     // Raycast Status
     // ----------------------------------------
 
-    bool IsNearBlock()
+    public bool IsGrounded()
     {
-        RaycastHit2D hitBlockRight = Physics2D.Raycast(transform.position, Vector2.right, 0.3f, 1 << 9);
-        RaycastHit2D hitBlockLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.3f, 1 << 9);
-        if (hitBlockRight.collider != null)
+        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
+        RaycastHit2D hitBlock = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 9);
+        return hitGround.collider!= null || hitBlock.collider != null ? true : false;
+    }
+
+
+    public bool IsInCrawlSpace()
+    {
+        RaycastHit2D hitCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 8);
+        if (hitCeiling.collider != null && IsGrounded())
         {
-            playerState.facingRightNearBlock = true;
-            playerState.facingLeftNearBlock = false;
+            playerAnimation.InCrawlSpace(true);
             return true;
         }
-        else if (hitBlockLeft.collider != null)
+        playerAnimation.InCrawlSpace(false);
+        return false;
+    }
+
+
+    public bool IsInClimbableSpace()
+    {
+        RaycastHit2D hitClimbRight = Physics2D.Raycast(transform.position, Vector2.right, 0.1f, 1 << 11);
+        RaycastHit2D hitClimbLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.1f, 1 << 11);
+
+        if (hitClimbLeft.collider != null && hitClimbRight.collider != null)
         {
-            playerState.facingRightNearBlock = false;
-            playerState.facingLeftNearBlock = true;
             return true;
         }
+
+        playerState.climbing = false;
+        playerAnimation.Climb(playerState.climbing);
         return false;
     }
 }
