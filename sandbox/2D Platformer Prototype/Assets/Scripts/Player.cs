@@ -248,6 +248,7 @@ public class Player : MonoBehaviour
     {
 
         playerSprite.flipX = controller.collisions.faceDir ==1 ? false : true;
+   
 
         /*
         if (directionalInput.x < 0 && !playerState.interacting)
@@ -303,9 +304,9 @@ public class Player : MonoBehaviour
 
         if (!interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false && !IsInCrawlSpace())
+            if (!playerState.ducking)
             {
-                if (canRun == false)
+                if (!canRun)
                 {
                     // Walk
                     targetVelocityX = directionalInput.x * moveSpeed;
@@ -323,14 +324,15 @@ public class Player : MonoBehaviour
                 targetVelocityX = directionalInput.x * moveSpeed;
                 playerAnimation.Move(targetVelocityX);
             }
-
+            Debug.Log(targetVelocityX);
             // The basic forces that act upon the player, based on its state
             Vector2 smoothRef = new Vector2(velocityXSmoothing, velocityYSmoothing);
             playerAnimation.Move(targetVelocityX);
-
+            float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
             if (playerState.jumping)
             {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 10), ref smoothRef, Time.deltaTime);
+                velocity.x = runVelocity;
+                velocity.y = Mathf.SmoothDamp(velocity.y, 10, ref velocityYSmoothing,Time.deltaTime);
                 playerAnimation.Jump(playerState.jumping);
             }
             else if (playerState.wallJumping)
@@ -343,8 +345,14 @@ public class Player : MonoBehaviour
             else
             {
                 velocity.y += gravity * Time.deltaTime;
-                float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
-                velocity.x = runVelocity;
+                
+                if (Mathf.Abs(runVelocity) > 0.1f)
+                {
+                    velocity.x = runVelocity;
+                }
+                else {
+                    velocity.x = 0;
+                }
             }
 
             controller.Move(velocity * Time.deltaTime, directionalInput);
