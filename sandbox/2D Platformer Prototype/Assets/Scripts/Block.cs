@@ -32,6 +32,7 @@ public class Block : MonoBehaviour
         IsMovable();
         IsOnCliff();
         IsInAir();
+        IsNearWall();
         UpdateCanMoveBlock();
     }
 
@@ -49,20 +50,14 @@ public class Block : MonoBehaviour
 
         if (player.canMoveBlock && IsNearPlayer() && IsGrounded())
         {
-            // if ((Input.GetKey(KeyCode.M) && (player.interactionState.pushingRight || player.interactionState.pushingLeft)) || !IsGrounded())
-            // {
-            //    rB2D.bodyType = RigidbodyType2D.Dynamic;
-            //    player.playerAnimation.Push(true);
-            // }
-
-            if (player.interactionState.pushingLeft || player.interactionState.pushingRight)
+            if ((player.interactionState.pushingLeft || player.interactionState.pushingRight) && !IsNearWall())
             {
                 transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
                 player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
                 player.playerAnimation.Push(true);
             }
 
-            if (player.interactionState.pullingLeft || player.interactionState.pullingRight)
+            if ((player.interactionState.pullingLeft || player.interactionState.pullingRight) && !IsPlayerNearWall())
             {
                 transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
                 player.transform.Translate(Input.GetAxisRaw("Horizontal") * 0.005f, 0, 0);
@@ -114,19 +109,19 @@ public class Block : MonoBehaviour
                 player.playerAnimation.Push(false);
                 player.playerAnimation.Pull(false);
             }
-            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingRightNearBlock)
+            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingRightNearBlock && !player.playerSprite.flipX)
             {
                 UpdateBlockGripStatus(true, false, false, false);
             }
-            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingLeftNearBlock)
+            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingLeftNearBlock && player.playerSprite.flipX)
             {
                 UpdateBlockGripStatus(false, true, false, false);
             }
-            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingLeftNearBlock)
+            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingLeftNearBlock && player.playerSprite.flipX)
             {
                 UpdateBlockGripStatus(false, false, false, true);
             }
-            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingRightNearBlock)
+            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingRightNearBlock && !player.playerSprite.flipX)
             {
                 UpdateBlockGripStatus(false, false, true, false);
             }
@@ -179,7 +174,7 @@ public class Block : MonoBehaviour
 
     bool IsGrounded()
     {
-        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
+        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.51f, 1 << 8);
         return hitGround.collider != null ? true : false;
     }
 
@@ -194,8 +189,8 @@ public class Block : MonoBehaviour
 
     bool PlayerIsNearBlock()
     {
-        RaycastHit2D hitBlockRight = Physics2D.Raycast(player.transform.position, Vector2.right, 0.3f, 1 << 9);
-        RaycastHit2D hitBlockLeft = Physics2D.Raycast(player.transform.position, Vector2.left, 0.3f, 1 << 9);
+        RaycastHit2D hitBlockRight = Physics2D.Raycast(player.transform.position, Vector2.right, 0.2f, 1 << 9);
+        RaycastHit2D hitBlockLeft = Physics2D.Raycast(player.transform.position, Vector2.left, 0.2f, 1 << 9);
         if (hitBlockRight.collider != null)
         {
             player.interactionState.facingRightNearBlock = true;
@@ -206,6 +201,30 @@ public class Block : MonoBehaviour
         {
             player.interactionState.facingRightNearBlock = false;
             player.interactionState.facingLeftNearBlock = true;
+            return true;
+        }
+        return false;
+    }
+
+    bool IsNearWall()
+    {
+        RaycastHit2D hitWallRight = Physics2D.Raycast(transform.position, new Vector2(0.85f, 0.4f), 0.55f, 1 << 8);
+        RaycastHit2D hitWallLeft = Physics2D.Raycast(transform.position, new Vector2(-0.85f, 0.4f), 0.55f, 1 << 8);
+        if (hitWallRight.collider != null || hitWallLeft.collider != null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool IsPlayerNearWall()
+    {
+        RaycastHit2D hitWallRight = Physics2D.Raycast(player.transform.position, new Vector2(0.3f, 0.3f), 0.4f, 1 << 8);
+        RaycastHit2D hitWallLeft = Physics2D.Raycast(player.transform.position, new Vector2(-0.3f, 0.3f), 0.4f, 1 << 8);
+        if (hitWallRight.collider != null || hitWallLeft.collider != null)
+        {
+            player.interactionState.pullingLeft = false;
+            player.interactionState.pullingRight = false;
             return true;
         }
         return false;

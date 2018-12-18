@@ -71,7 +71,7 @@ public class Player : MonoBehaviour
     public Vector2 velocity;
 
     // Class Variables
-    SpriteRenderer playerSprite;
+    public SpriteRenderer playerSprite;
     Controller2D controller;
 	BoxCollider2D boxCollider;
 
@@ -286,7 +286,7 @@ public class Player : MonoBehaviour
     {
         float targetVelocityX;
 
-        if (!interactionState.pullingRight && !interactionState.pullingLeft)
+        if (!playerState.interacting && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
             if (playerState.ducking == false && !IsInCrawlSpace())
             {
