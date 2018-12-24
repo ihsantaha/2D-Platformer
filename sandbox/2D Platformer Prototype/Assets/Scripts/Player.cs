@@ -22,6 +22,7 @@ public class Player : MonoBehaviour
 		public bool jumping;
 		public bool wallJumping;
         public bool climbing;
+        public bool hanging;
 
         public object playerStateRef;
 
@@ -44,7 +45,6 @@ public class Player : MonoBehaviour
         public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
-        public bool canClimb;
 
         public object playerStateRef;
 
@@ -145,12 +145,20 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
-        CheckStartClimb();
+        CanClimb();
+        CanHang();
 
         // Raycast Status
         IsGrounded();
         IsInCrawlSpace();
         IsInClimbableSpace();
+        IsUnderGripCeiling();
+
+        // Animation Speed
+        IsNotHangingNorClimbing();
+
+        Debug.Log(playerState.hanging);
+        Debug.DrawRay(transform.position, Vector2.up * 0.5f, Color.red);
     }
 
 
@@ -200,6 +208,8 @@ public class Player : MonoBehaviour
     }
 
 
+
+
     // --------------------------------------------------------------------------------
     // Movement Status
     // --------------------------------------------------------------------------------
@@ -230,6 +240,21 @@ public class Player : MonoBehaviour
             canRun = false;
         }
     }
+
+
+    public void IsNotHangingNorClimbing()
+    {
+        if (playerState.climbing && velocity.y == 0)
+        {
+            playerAnimation.Climb(playerState.climbing, 0);
+        }
+        if (playerState.hanging && velocity.x == 0)
+        {
+            playerAnimation.Hang(playerState.hanging, 0);
+        }
+    }
+
+
 
 
     // --------------------------------------------------------------------------------
@@ -331,6 +356,10 @@ public class Player : MonoBehaviour
             {
                 Climb();
             }
+            else if (playerState.hanging && IsUnderGripCeiling())
+            {
+                Hang();
+            }
             else
             {
                 velocity.y += gravity * Time.deltaTime;
@@ -371,7 +400,32 @@ public class Player : MonoBehaviour
         {
             velocity.y = 0;
             velocity.x = 0;
-            playerAnimation.Climb(playerState.climbing, 0);
+        }
+    }
+
+
+    public void Hang()
+    {
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+
+            playerState.hanging = false;
+            playerState.jumping = true;
+        }
+        else  if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            velocity.x = -1;
+            playerAnimation.Hang(playerState.hanging);
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            velocity.x = 1;
+            playerAnimation.Hang(playerState.hanging);
+        }
+        else
+        {
+            velocity.y = 0;
+            velocity.x = 0;
         }
     }
 
@@ -476,11 +530,19 @@ public class Player : MonoBehaviour
     }
 
 
-    public void CheckStartClimb()
+    public void CanClimb()
     {
-        if (IsInClimbableSpace() && Input.GetKeyDown("up"))
+        if (IsInClimbableSpace() && Input.GetKeyDown(KeyCode.UpArrow))
         {
             playerState.climbing = true;
+        }
+    }
+
+    public void CanHang()
+    {
+        if (IsUnderGripCeiling() && Input.GetKey(KeyCode.UpArrow))
+        {
+            playerState.hanging = true;
         }
     }
 
@@ -571,6 +633,20 @@ public class Player : MonoBehaviour
 
         playerState.climbing = false;
         playerAnimation.Climb(playerState.climbing);
+        return false;
+    }
+
+    public bool IsUnderGripCeiling()
+    {
+        RaycastHit2D hitGripCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 13);
+
+        if (hitGripCeiling.collider != null)
+        {
+            return true;
+        }
+
+        playerState.hanging = false;
+        playerAnimation.Hang(playerState.hanging);
         return false;
     }
 }
