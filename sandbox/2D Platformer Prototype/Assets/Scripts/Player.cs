@@ -156,9 +156,6 @@ public class Player : MonoBehaviour
 
         // Animation Speed
         IsNotHangingNorClimbing();
-
-        Debug.Log(playerState.hanging);
-        Debug.DrawRay(transform.position, Vector2.up * 0.5f, Color.red);
     }
 
 
@@ -378,7 +375,7 @@ public class Player : MonoBehaviour
             playerState.climbing = false;
             playerState.jumping = true;
         }
-        else if (Input.GetKey(KeyCode.UpArrow))
+        else if (Input.GetKey(KeyCode.UpArrow) && !IsOnTopMostLadder())
         {
             velocity.y = 2;
             velocity.x = 0;
@@ -635,6 +632,19 @@ public class Player : MonoBehaviour
         playerAnimation.Climb(playerState.climbing);
         return false;
     }
+    
+
+    public bool IsOnTopMostLadder()
+    {
+        RaycastHit2D hitEndOfLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.up, 0.5f, 1 << 11);
+
+        if (hitEndOfLadder.collider == null)
+        {
+            return true;
+        }
+        return false;
+    }
+
 
     public bool IsUnderGripCeiling()
     {
