@@ -7,6 +7,9 @@ TagManager:
   - Ground
   - Block
   - CrawlSpace
+  - GripCeiling
+  - Water
+  - WaterSpace
   layers:
   - Default
   - TransparentFX
@@ -21,8 +24,8 @@ TagManager:
   - Player
   - Ladder
   - CrawlSpace
-  - 
-  - 
+  - GripCeiling
+  - WaterSpace
   - 
   - 
   - 

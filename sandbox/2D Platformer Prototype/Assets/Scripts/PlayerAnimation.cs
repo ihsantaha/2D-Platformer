@@ -70,6 +70,12 @@ public class PlayerAnimation : MonoBehaviour
         anim.speed = speed;
     }
 
+    public void Hang(bool hang, int speed = 1)
+    {
+        anim.SetBool("Hang", hang);
+        anim.speed = speed;
+    }
+
     public void Push(bool push)
     {
         anim.SetBool("Push", push);

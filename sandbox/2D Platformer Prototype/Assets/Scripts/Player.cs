@@ -22,6 +22,7 @@ public class Player : MonoBehaviour
 		public bool jumping;
 		public bool wallJumping;
         public bool climbing;
+        public bool hanging;
 
         public object playerStateRef;
 
@@ -44,7 +45,6 @@ public class Player : MonoBehaviour
         public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
-        public bool canClimb;
 
         public object playerStateRef;
 
@@ -114,7 +114,6 @@ public class Player : MonoBehaviour
 
 
 
-
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
@@ -145,12 +144,19 @@ public class Player : MonoBehaviour
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
-        CheckStartClimb();
+        CheckWaterCollision();
+        CanClimb();
+        CanHang();
 
         // Raycast Status
         IsGrounded();
         IsInCrawlSpace();
+        IsInWater();
         IsInClimbableSpace();
+        IsUnderGripCeiling();
+
+        // Animation Speed
+        IsNotHangingNorClimbing();
     }
 
 
@@ -200,6 +206,8 @@ public class Player : MonoBehaviour
     }
 
 
+
+
     // --------------------------------------------------------------------------------
     // Movement Status
     // --------------------------------------------------------------------------------
@@ -230,6 +238,21 @@ public class Player : MonoBehaviour
             canRun = false;
         }
     }
+
+
+    public void IsNotHangingNorClimbing()
+    {
+        if (playerState.climbing && velocity.y == 0)
+        {
+            playerAnimation.Climb(playerState.climbing, 0);
+        }
+        if (playerState.hanging && velocity.x == 0)
+        {
+            playerAnimation.Hang(playerState.hanging, 0);
+        }
+    }
+
+
 
 
     // --------------------------------------------------------------------------------
@@ -285,6 +308,7 @@ public class Player : MonoBehaviour
     void Move()
     {
         float targetVelocityX;
+        moveSpeed = IsInWater() ? 1 : 4;
 
         if (!playerState.interacting && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
@@ -331,6 +355,10 @@ public class Player : MonoBehaviour
             {
                 Climb();
             }
+            else if (playerState.hanging && IsUnderGripCeiling())
+            {
+                Hang();
+            }
             else
             {
                 velocity.y += gravity * Time.deltaTime;
@@ -342,6 +370,7 @@ public class Player : MonoBehaviour
         }
 	}
 
+
     public void Climb()
     {
         if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
@@ -349,7 +378,7 @@ public class Player : MonoBehaviour
             playerState.climbing = false;
             playerState.jumping = true;
         }
-        else if (Input.GetKey(KeyCode.UpArrow))
+        else if (Input.GetKey(KeyCode.UpArrow) && !IsOnTopMostLadder())
         {
             velocity.y = 2;
             velocity.x = 0;
@@ -371,7 +400,26 @@ public class Player : MonoBehaviour
         {
             velocity.y = 0;
             velocity.x = 0;
-            playerAnimation.Climb(playerState.climbing, 0);
+        }
+    }
+
+
+    public void Hang()
+    {
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+
+            playerState.hanging = false;
+            playerState.jumping = true;
+        }
+        else  if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))
+        {
+            velocity.x = directionalInput.x;
+            playerAnimation.Hang(playerState.hanging);
+        }
+        else
+        {
+            velocity = Vector2.zero;
         }
     }
 
@@ -476,11 +524,49 @@ public class Player : MonoBehaviour
     }
 
 
-    public void CheckStartClimb()
+    public void CheckWaterCollision()
     {
-        if (IsInClimbableSpace() && Input.GetKeyDown("up"))
+        if (IsInWater())
+        {
+            if (Input.GetKey(KeyCode.S))
+            {
+                velocity.y = 0.3f;
+
+                if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+                {
+                    velocity.x = directionalInput.x;
+                }
+                if (Input.GetKey(KeyCode.UpArrow))
+                {
+                    velocity.y = 1f;
+                }
+                else if (Input.GetKey(KeyCode.DownArrow))
+                {
+                    velocity.y = -1;
+                }
+            }
+            else
+            {
+                velocity.y = -0.3f;
+            }
+        }
+    }
+
+
+    public void CanClimb()
+    {
+        if (IsInClimbableSpace() && Input.GetKeyDown(KeyCode.UpArrow))
         {
             playerState.climbing = true;
+        }
+    }
+
+
+    public void CanHang()
+    {
+        if (IsUnderGripCeiling() && Input.GetKey(KeyCode.UpArrow))
+        {
+            playerState.hanging = true;
         }
     }
 
@@ -572,5 +658,40 @@ public class Player : MonoBehaviour
         playerState.climbing = false;
         playerAnimation.Climb(playerState.climbing);
         return false;
+    }
+    
+
+    public bool IsOnTopMostLadder()
+    {
+        RaycastHit2D hitEndOfLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.up, 0.5f, 1 << 11);
+
+        if (hitEndOfLadder.collider == null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    public bool IsUnderGripCeiling()
+    {
+        RaycastHit2D hitGripCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.5f, 1 << 13);
+
+        if (hitGripCeiling.collider != null)
+        {
+            return true;
+        }
+
+        playerState.hanging = false;
+        playerAnimation.Hang(playerState.hanging);
+        return false;
+    }
+
+
+    public bool IsInWater()
+    {
+        RaycastHit2D hitWater = Physics2D.Raycast(transform.position + Vector3.up * 0.8f, Vector2.down, 0.55f, 1 << 14);
+
+        return hitWater.collider != null ? true : false;
     }
 }

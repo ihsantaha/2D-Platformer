@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d5751a2c961df945a34295ccf5e576d, type: 3}
+  m_Name: GripCeiling Brush
+  m_EditorClassIdentifier: 
+  m_Prefabs:
+  - {fileID: 1603489508365752, guid: 7934398a1d8503545b7022ecef245e55, type: 2}
+  - {fileID: 1461619442551302, guid: 2446852d115e6f044852076d28c74616, type: 2}
+  - {fileID: 1319127664110244, guid: 1093ed2907120df4ea9745c594d361c7, type: 2}
+  m_PerlinScale: 0.64
+  m_Z: 0
