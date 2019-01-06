@@ -109,19 +109,19 @@ public class Block : MonoBehaviour
                 player.playerAnimation.Push(false);
                 player.playerAnimation.Pull(false);
             }
-            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingRightNearBlock && !player.playerSprite.flipX)
+            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingRightNearBlock && !player.playerSpriteRenderer.flipX)
             {
                 UpdateBlockGripStatus(true, false, false, false);
             }
-            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingLeftNearBlock && player.playerSprite.flipX)
+            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingLeftNearBlock && player.playerSpriteRenderer.flipX)
             {
                 UpdateBlockGripStatus(false, true, false, false);
             }
-            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingLeftNearBlock && player.playerSprite.flipX)
+            else if (Input.GetKey(KeyCode.RightArrow) && player.interactionState.facingLeftNearBlock && player.playerSpriteRenderer.flipX)
             {
                 UpdateBlockGripStatus(false, false, false, true);
             }
-            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingRightNearBlock && !player.playerSprite.flipX)
+            else if (Input.GetKey(KeyCode.LeftArrow) && player.interactionState.facingRightNearBlock && !player.playerSpriteRenderer.flipX)
             {
                 UpdateBlockGripStatus(false, false, true, false);
             }
