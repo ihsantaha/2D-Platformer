@@ -40,6 +40,12 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void Defend(int defend)
+    {
+        anim.SetFloat("Defend", Mathf.Abs(defend));
+    }
+
+
     public void Slide(bool value)
     {
         anim.SetBool("Slide", value);
@@ -61,6 +67,12 @@ public class PlayerAnimation : MonoBehaviour
     public void WallSlide(bool wallSlide)
     {
         anim.SetBool("WallSlide", wallSlide);
+    }
+
+
+    public void InWater(bool inWater)
+    {
+        anim.SetBool("InWater", inWater);
     }
 
 
