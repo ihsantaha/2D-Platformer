@@ -17,6 +17,9 @@ public class Player : MonoBehaviour
         public bool ducking;
         public bool crawling;
         public bool dashing;
+        public bool defending;
+        public bool defendingUpwards;
+        public bool defendingDownwards;
 
         public bool floating;
 		public bool jumping;
@@ -94,7 +97,7 @@ public class Player : MonoBehaviour
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
 
-    float wallFriction = 3;
+    float wallFriction = 1;
     float wallStickTime = .25f;
     float timeToWallUnstick;
 
@@ -142,6 +145,7 @@ public class Player : MonoBehaviour
         PlayerDirection ();
         Duck();
         Move();
+        Defend();
 
         // Interaction
         CheckWallCollisions();
@@ -153,7 +157,7 @@ public class Player : MonoBehaviour
         // Raycast Status
         IsGrounded();
         IsNearWall();
-        Debug.Log(IsInCrawlSpace());
+        IsInCrawlSpace();
         IsInWater();
         IsInClimbableSpace();
         IsUnderGripCeiling();
@@ -319,16 +323,24 @@ public class Player : MonoBehaviour
     void Move()
     {
         float targetVelocityX;
-        moveSpeed = IsInWater() ? 1 : 4;
+        moveSpeed = IsInWater() ? 1 : 2;
 
-        if (!playerState.interacting && !interactionState.pullingRight && !interactionState.pullingLeft)
+        if (!playerState.interacting && !playerState.defending && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false && !IsInCrawlSpace())
+            if (!playerState.ducking && !IsInCrawlSpace())
             {
-                if (canRun == false)
+                if (!canRun)
                 {
-                    // Walk
-                    targetVelocityX = directionalInput.x * moveSpeed;
+                    if (Input.GetKey(KeyCode.X) && !IsInWater())
+                    {
+                        // Sneak
+                        targetVelocityX = directionalInput.x * moveSpeed * 0.1f;
+                        playerAnimation.Move(targetVelocityX);
+                    } else
+                    {
+                        // Walk
+                        targetVelocityX = directionalInput.x * moveSpeed;
+                    }
                 }
                 else
                 {
@@ -340,7 +352,7 @@ public class Player : MonoBehaviour
             {
                 // Crawl
                 canRun = false;
-                targetVelocityX = directionalInput.x * moveSpeed;
+                targetVelocityX = directionalInput.x * moveSpeed * 0.5f;
                 playerAnimation.Move(targetVelocityX);
             }
 
@@ -350,7 +362,7 @@ public class Player : MonoBehaviour
 
             if (playerState.jumping)
             {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 10), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 7.5f), ref smoothRef, Time.deltaTime);
                 playerAnimation.Jump(playerState.jumping);
             }
             else if (playerState.wallJumping)
@@ -360,7 +372,7 @@ public class Player : MonoBehaviour
             else if (playerState.dashing)
             {
                 // Slide
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 10, velocity.y), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 7.5f, velocity.y), ref smoothRef, Time.deltaTime);
             }
             else if (playerState.climbing && IsInClimbableSpace())
             {
@@ -372,7 +384,10 @@ public class Player : MonoBehaviour
             }
             else
             {
-                velocity.y += gravity * Time.deltaTime;
+                if (!IsInWater())
+                {
+                    velocity.y += gravity * Time.deltaTime;
+                }
                 float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
                 velocity.x = runVelocity;
             }
@@ -431,6 +446,32 @@ public class Player : MonoBehaviour
         else
         {
             velocity = Vector2.zero;
+        }
+    }
+
+
+    public void Defend()
+    {
+        if (Input.GetKey(KeyCode.LeftAlt) && IsGrounded())
+        {
+            playerState.defending = true;
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                playerAnimation.Defend(3);
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                playerAnimation.Defend(1);
+            } else
+            {
+                playerAnimation.Defend(2);
+            }
+        }
+        else
+        {
+            playerState.defending = false;
+            playerAnimation.Defend(0);
         }
     }
 
@@ -541,7 +582,7 @@ public class Player : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.C))
             {
-                velocity.y = 0.55f;
+                velocity.y = 0;
 
                 // Play float in water animation if no directional input is detected
                 if (!Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow) &&
@@ -619,7 +660,7 @@ public class Player : MonoBehaviour
             }
             else
             {
-                velocity.y = -0.3f;
+                velocity.y = -0.4f;
                 playerSpriteTransform.rotation = Quaternion.Euler(0, 0, 0);
                 playerAnimation.FloatInWater(false);
                 playerAnimation.Swim(false);
@@ -632,6 +673,7 @@ public class Player : MonoBehaviour
         }
         else
         {
+            playerAnimation.FloatInWater(false);
             playerAnimation.Swim(false);
         }
     }
@@ -785,8 +827,10 @@ public class Player : MonoBehaviour
 
         if (hitWater.collider != null)
         {
+            playerAnimation.InWater(true);
             return true;
         }
+        playerAnimation.InWater(false);
         return false;
     }
 
