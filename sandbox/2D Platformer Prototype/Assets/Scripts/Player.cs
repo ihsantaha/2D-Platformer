@@ -386,7 +386,15 @@ public class Player : MonoBehaviour
             {
                 if (!IsInWater())
                 {
-                    velocity.y += gravity * Time.deltaTime;
+                    if (!IsGrounded() && Input.GetKey(KeyCode.G))
+                    {
+                        // GLide
+                        velocity.y = -2;
+                    }
+                    else
+                    {
+                        velocity.y += gravity * Time.deltaTime;
+                    }
                 }
                 float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
                 velocity.x = runVelocity;
