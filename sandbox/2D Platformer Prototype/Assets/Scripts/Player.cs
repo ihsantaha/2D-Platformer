@@ -407,24 +407,13 @@ public class Player : MonoBehaviour
 
     public void Climb()
     {
-        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
+      if (directionalInput.y != 0 || directionalInput.x != 0 )
         {
-            playerState.climbing = false;
-            playerState.jumping = true;
-        }
-        else if (Input.GetKey(KeyCode.UpArrow) && !IsOnTopMostLadder())
-        {
-            velocity.y = 2;
-            velocity.x = 0;
-            playerAnimation.Climb(playerState.climbing);
-        }
-        else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            velocity.y = -2;
-            velocity.x = 0;
+            velocity.y = 2 * directionalInput.y;
+            velocity.x = 2 * directionalInput.x;
             playerAnimation.Climb(playerState.climbing);
 
-            if (IsGrounded())
+            if (IsGrounded() && directionalInput.y == -1)
             {
                 playerState.climbing = false;
                 playerAnimation.Climb(playerState.climbing);
