@@ -17,11 +17,15 @@ public class Player : MonoBehaviour
         public bool ducking;
         public bool crawling;
         public bool dashing;
+        public bool defending;
+        public bool defendingUpwards;
+        public bool defendingDownwards;
 
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
         public bool climbing;
+        public bool hanging;
 
         public object playerStateRef;
 
@@ -44,7 +48,6 @@ public class Player : MonoBehaviour
         public bool pushingLeft;
         public bool pullingRight;
         public bool pullingLeft;
-        public bool canClimb;
 
         public object playerStateRef;
 
@@ -71,7 +74,8 @@ public class Player : MonoBehaviour
     public Vector2 velocity;
 
     // Class Variables
-    SpriteRenderer playerSprite;
+    public Transform playerSpriteTransform;
+    public SpriteRenderer playerSpriteRenderer;
     Controller2D controller;
 	BoxCollider2D boxCollider;
 
@@ -93,7 +97,7 @@ public class Player : MonoBehaviour
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
 
-    float wallFriction = 3;
+    float wallFriction = 1;
     float wallStickTime = .25f;
     float timeToWallUnstick;
 
@@ -114,14 +118,14 @@ public class Player : MonoBehaviour
 
 
 
-
     // --------------------------------------------------------------------------------
     // Methods
     // --------------------------------------------------------------------------------
 
     void Start()
 	{
-        playerSprite = GetComponentInChildren<SpriteRenderer>();
+        playerSpriteTransform = GetComponentInChildren<Transform>();
+        playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
         playerAnimation = GetComponent<PlayerAnimation>();
 
         controller = GetComponent<Controller2D> ();
@@ -141,16 +145,25 @@ public class Player : MonoBehaviour
         PlayerDirection ();
         Duck();
         Move();
+        Defend();
 
         // Interaction
         CheckWallCollisions();
         CheckVerticalCollisions();
-        CheckStartClimb();
+        CheckWaterCollision();
+        CanClimb();
+        CanHang();
 
         // Raycast Status
         IsGrounded();
+        IsNearWall();
         IsInCrawlSpace();
+        IsInWater();
         IsInClimbableSpace();
+        IsUnderGripCeiling();
+
+        // Animation Speed
+        IsNotHangingNorClimbing();
     }
 
 
@@ -200,6 +213,8 @@ public class Player : MonoBehaviour
     }
 
 
+
+
     // --------------------------------------------------------------------------------
     // Movement Status
     // --------------------------------------------------------------------------------
@@ -232,6 +247,29 @@ public class Player : MonoBehaviour
     }
 
 
+    public void IsNotHangingNorClimbing()
+    {
+        if (playerState.climbing && velocity.y == 0)
+        {
+            playerAnimation.Climb(playerState.climbing, 0);
+        }
+        if (playerState.hanging && velocity.x == 0)
+        {
+            playerAnimation.Hang(playerState.hanging, 0);
+        }
+    }
+
+
+    public void SwimDirection(float direction, Quaternion angle, bool swim)
+    {
+        velocity.x = direction;
+        playerSpriteTransform.rotation = angle;
+        playerAnimation.Swim(swim);
+    }
+
+
+
+
     // --------------------------------------------------------------------------------
     // Basic Movement
     // --------------------------------------------------------------------------------
@@ -240,11 +278,11 @@ public class Player : MonoBehaviour
     {
         if (!playerState.interacting && Input.GetAxisRaw("Horizontal") < 0)
         {
-            playerSprite.flipX = true;
+            playerSpriteRenderer.flipX = true;
         }
         else if (!playerState.interacting && Input.GetAxisRaw("Horizontal") > 0)
         {
-            playerSprite.flipX = false;
+            playerSpriteRenderer.flipX = false;
         }
     }
 
@@ -285,15 +323,24 @@ public class Player : MonoBehaviour
     void Move()
     {
         float targetVelocityX;
+        moveSpeed = IsInWater() ? 1 : 2;
 
-        if (!interactionState.pullingRight && !interactionState.pullingLeft)
+        if (!playerState.interacting && !playerState.defending && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
-            if (playerState.ducking == false && !IsInCrawlSpace())
+            if (!playerState.ducking && !IsInCrawlSpace())
             {
-                if (canRun == false)
+                if (!canRun)
                 {
-                    // Walk
-                    targetVelocityX = directionalInput.x * moveSpeed;
+                    if (Input.GetKey(KeyCode.X) && !IsInWater())
+                    {
+                        // Sneak
+                        targetVelocityX = directionalInput.x * moveSpeed * 0.1f;
+                        playerAnimation.Move(targetVelocityX);
+                    } else
+                    {
+                        // Walk
+                        targetVelocityX = directionalInput.x * moveSpeed;
+                    }
                 }
                 else
                 {
@@ -305,7 +352,7 @@ public class Player : MonoBehaviour
             {
                 // Crawl
                 canRun = false;
-                targetVelocityX = directionalInput.x * moveSpeed;
+                targetVelocityX = directionalInput.x * moveSpeed * 0.5f;
                 playerAnimation.Move(targetVelocityX);
             }
 
@@ -315,7 +362,7 @@ public class Player : MonoBehaviour
 
             if (playerState.jumping)
             {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 10), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(targetVelocityX, 7.5f), ref smoothRef, Time.deltaTime);
                 playerAnimation.Jump(playerState.jumping);
             }
             else if (playerState.wallJumping)
@@ -325,15 +372,30 @@ public class Player : MonoBehaviour
             else if (playerState.dashing)
             {
                 // Slide
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 10, velocity.y), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 7.5f, velocity.y), ref smoothRef, Time.deltaTime);
             }
             else if (playerState.climbing && IsInClimbableSpace())
             {
                 Climb();
             }
+            else if (playerState.hanging && IsUnderGripCeiling())
+            {
+                Hang();
+            }
             else
             {
-                velocity.y += gravity * Time.deltaTime;
+                if (!IsInWater())
+                {
+                    if (!IsGrounded() && Input.GetKey(KeyCode.G))
+                    {
+                        // GLide
+                        velocity.y = -2;
+                    }
+                    else
+                    {
+                        velocity.y += gravity * Time.deltaTime;
+                    }
+                }
                 float runVelocity = Mathf.SmoothDamp(velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below) ? accelerationTimeGrounded : accelerationTimeAirborne);
                 velocity.x = runVelocity;
             }
@@ -342,6 +404,7 @@ public class Player : MonoBehaviour
         }
 	}
 
+
     public void Climb()
     {
         if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
@@ -349,7 +412,7 @@ public class Player : MonoBehaviour
             playerState.climbing = false;
             playerState.jumping = true;
         }
-        else if (Input.GetKey(KeyCode.UpArrow))
+        else if (Input.GetKey(KeyCode.UpArrow) && !IsOnTopMostLadder())
         {
             velocity.y = 2;
             velocity.x = 0;
@@ -371,7 +434,52 @@ public class Player : MonoBehaviour
         {
             velocity.y = 0;
             velocity.x = 0;
-            playerAnimation.Climb(playerState.climbing, 0);
+        }
+    }
+
+
+    public void Hang()
+    {
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+
+            playerState.hanging = false;
+            playerState.jumping = true;
+        }
+        else  if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+        {
+            velocity.x = directionalInput.x;
+            playerAnimation.Hang(playerState.hanging);
+        }
+        else
+        {
+            velocity = Vector2.zero;
+        }
+    }
+
+
+    public void Defend()
+    {
+        if (Input.GetKey(KeyCode.LeftAlt) && IsGrounded())
+        {
+            playerState.defending = true;
+
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                playerAnimation.Defend(3);
+            }
+            else if (Input.GetKey(KeyCode.DownArrow))
+            {
+                playerAnimation.Defend(1);
+            } else
+            {
+                playerAnimation.Defend(2);
+            }
+        }
+        else
+        {
+            playerState.defending = false;
+            playerAnimation.Defend(0);
         }
     }
 
@@ -476,11 +584,123 @@ public class Player : MonoBehaviour
     }
 
 
-    public void CheckStartClimb()
+    public void CheckWaterCollision()
     {
-        if (IsInClimbableSpace() && Input.GetKeyDown("up"))
+        if (IsInWater())
+        {
+            if (Input.GetKey(KeyCode.C))
+            {
+                velocity.y = 0;
+
+                // Play float in water animation if no directional input is detected
+                if (!Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow) &&
+                    !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow))
+                {
+                    playerAnimation.FloatInWater(true);
+                } else
+                {
+                    playerAnimation.FloatInWater(false);
+                }
+
+                if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+                {
+                    int angle;
+
+                    // Swim in the up left or up right direction and up only if a wall is deteced to not go through it
+                    if (Input.GetKey(KeyCode.UpArrow) && !IsOnWaterSurface())
+                    {
+                        if (playerSpriteRenderer.flipX)
+                        {
+                            angle = IsNearWall() ? -90 : -45;
+                            SwimDirection(-1, Quaternion.Euler(0, 0, angle), true);
+                        }
+                        else
+                        {
+                            angle = IsNearWall() ? 90 : 45;
+                            SwimDirection(1, Quaternion.Euler(0, 0, angle), true);
+                        }
+                    }
+                    // Swim in the down left or down right direction and down only if a wall is deteced to not go through it
+                    else if (Input.GetKey(KeyCode.DownArrow) && !IsGrounded())
+                    {
+                        if (playerSpriteRenderer.flipX)
+                        {
+                            angle = IsNearWall() ?  90 : 45;
+                            SwimDirection(-1, Quaternion.Euler(0, 0, angle), true);
+                        }
+                        else
+                        {
+                            angle = IsNearWall() ?  -90 : -45;
+                            SwimDirection(1, Quaternion.Euler(0, 0, angle), true);
+                        }
+                    }
+                    else
+                    {
+                        SwimDirection(directionalInput.x, Quaternion.Euler(0, 0, 0), true);
+                    }
+                }
+                else if (Input.GetKey(KeyCode.UpArrow) && !IsOnWaterSurface())
+                {
+                    if (playerSpriteRenderer.flipX)
+                    {
+                        SwimDirection(-1, Quaternion.Euler(0, 0, -90), true);
+                    }
+                    else
+                    {
+                        SwimDirection(1, Quaternion.Euler(0, 0, 90), true);
+                    }
+                }
+                else if (Input.GetKey(KeyCode.DownArrow) && !IsGrounded())
+                {
+                    if (playerSpriteRenderer.flipX)
+                    {
+                        SwimDirection(-1, Quaternion.Euler(0, 0, 90), true);
+                    }
+                    else
+                    {
+                        SwimDirection(1, Quaternion.Euler(0, 0, -90), true);
+                    }
+                }
+                else
+                {
+                    SwimDirection(0, Quaternion.Euler(0, 0, 0), false);
+                }
+            }
+            else
+            {
+                velocity.y = -0.4f;
+                playerSpriteTransform.rotation = Quaternion.Euler(0, 0, 0);
+                playerAnimation.FloatInWater(false);
+                playerAnimation.Swim(false);
+
+                if (!IsGrounded())
+                {
+                    playerAnimation.Fall(true);
+                }
+            }
+        }
+        else
+        {
+            playerAnimation.FloatInWater(false);
+            playerAnimation.Swim(false);
+        }
+    }
+
+
+    public void CanClimb()
+    {
+        if (IsInClimbableSpace() && Input.GetKeyDown(KeyCode.UpArrow))
         {
             playerState.climbing = true;
+        }
+    }
+
+
+    public void CanHang()
+    {
+        if (IsUnderGripCeiling() && Input.GetKey(KeyCode.UpArrow))
+        {
+            playerState.hanging = true;
         }
     }
 
@@ -523,7 +743,6 @@ public class Player : MonoBehaviour
 		playerState.jumping = false;
 	}
 
-
 	IEnumerator WallJumpRoutine()
 	{
 		playerState.wallJumping = true;
@@ -546,10 +765,18 @@ public class Player : MonoBehaviour
     }
 
 
+    public bool IsNearWall()
+    {
+        RaycastHit2D hitWallRight = Physics2D.Raycast(transform.position, Vector2.right, 0.55f, 1 << 8);
+        RaycastHit2D hitWallLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.55f, 1 << 8);
+        return hitWallRight.collider != null || hitWallLeft.collider != null ? true : false;
+    }
+
+
     public bool IsInCrawlSpace()
     {
-        RaycastHit2D hitCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 8);
-        if (hitCeiling.collider != null && IsGrounded())
+        RaycastHit2D hitCrawlSpace = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 12);
+        if (hitCrawlSpace.collider != null && IsGrounded())
         {
             playerAnimation.InCrawlSpace(true);
             return true;
@@ -572,5 +799,54 @@ public class Player : MonoBehaviour
         playerState.climbing = false;
         playerAnimation.Climb(playerState.climbing);
         return false;
+    }
+    
+
+    public bool IsOnTopMostLadder()
+    {
+        RaycastHit2D hitEndOfLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.up, 0.5f, 1 << 11);
+
+        if (hitEndOfLadder.collider == null)
+        {
+            return true;
+        }
+        return false;
+    }
+
+
+    public bool IsUnderGripCeiling()
+    {
+        RaycastHit2D hitGripCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.5f, 1 << 13);
+
+        if (hitGripCeiling.collider != null)
+        {
+            return true;
+        }
+
+        playerState.hanging = false;
+        playerAnimation.Hang(playerState.hanging);
+        return false;
+    }
+
+
+    public bool IsInWater()
+    {
+        RaycastHit2D hitWater = Physics2D.Raycast(transform.position + Vector3.up * 0.9f, Vector2.down, 0.55f, 1 << 14);
+
+        if (hitWater.collider != null)
+        {
+            playerAnimation.InWater(true);
+            return true;
+        }
+        playerAnimation.InWater(false);
+        return false;
+    }
+
+
+    public bool IsOnWaterSurface()
+    {
+        RaycastHit2D hitSurface = Physics2D.Raycast(transform.position + Vector3.up * 0.7f, Vector2.up, 0.55f, 1 << 14);
+
+        return hitSurface.collider == null ? true : false;
     }
 }

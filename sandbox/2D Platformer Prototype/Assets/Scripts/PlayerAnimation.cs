@@ -40,6 +40,12 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void Defend(int defend)
+    {
+        anim.SetFloat("Defend", Mathf.Abs(defend));
+    }
+
+
     public void Slide(bool value)
     {
         anim.SetBool("Slide", value);
@@ -64,11 +70,37 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void InWater(bool inWater)
+    {
+        anim.SetBool("InWater", inWater);
+    }
+
+
+    public void FloatInWater(bool floatInWater)
+    {
+        anim.SetBool("FloatInWater", floatInWater);
+    }
+
+
+    public void Swim(bool swim)
+    {
+        anim.SetBool("Swim", swim);
+    }
+
+
     public void Climb(bool climb, int speed = 1)
     {
         anim.SetBool("Climb", climb);
         anim.speed = speed;
     }
+
+
+    public void Hang(bool hang, int speed = 1)
+    {
+        anim.SetBool("Hang", hang);
+        anim.speed = speed;
+    }
+
 
     public void Push(bool push)
     {
