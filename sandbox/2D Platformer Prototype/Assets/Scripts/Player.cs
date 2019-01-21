@@ -409,7 +409,7 @@ public class Player : MonoBehaviour
     {
       if (directionalInput.y != 0 || directionalInput.x != 0 )
         {
-            velocity.y = 2 * directionalInput.y;
+            velocity.y = (IsOnTopMostLadder() && directionalInput.y > 0) ? 0 : 2 * directionalInput.y;
             velocity.x = 2 * directionalInput.x;
             playerAnimation.Climb(playerState.climbing);
 
