@@ -325,6 +325,11 @@ public class Player : MonoBehaviour
         float targetVelocityX;
         moveSpeed = IsInWater() ? 1 : 2;
 
+        if(directionalInput.x == 0)
+        {
+            velocity.x = 0;
+        }
+
         if (!playerState.interacting && !playerState.defending && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
             if (!playerState.ducking && !IsInCrawlSpace())
