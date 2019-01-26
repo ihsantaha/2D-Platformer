@@ -393,8 +393,8 @@ public class Player : MonoBehaviour
                 {
                     if (!IsGrounded() && Input.GetKey(KeyCode.G))
                     {
-                        // GLide
-                        velocity.y = -2;
+                        // Glide
+                        velocity.y = -1;
                     }
                     else
                     {
