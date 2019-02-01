@@ -187,6 +187,11 @@ public class Player : MonoBehaviour
             {
                 wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
+            else if (IsInWater())
+            {
+                jumpCounter = 1;
+                jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));
+            }
             else if (jumpCounter > 0)
             {
                 if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
