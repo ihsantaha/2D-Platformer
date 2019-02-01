@@ -330,7 +330,7 @@ public class Player : MonoBehaviour
         float targetVelocityX;
         moveSpeed = IsInWater() ? 1 : 2;
 
-        if(directionalInput.x == 0)
+        if(directionalInput.x == 0 && !IsInWater())
         {
             velocity.x = 0;
         }
