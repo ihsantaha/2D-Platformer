@@ -97,9 +97,9 @@ public class Player : MonoBehaviour
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
 
-    float wallFriction = 1;
-    float wallStickTime = .25f;
-    float timeToWallUnstick;
+    float wallSlideSpeed = 2;
+    float wallStickDelay = .1f;
+	float wallHoldDuration;
 
     int wallDirX;
     int jumpCounter;
@@ -142,7 +142,7 @@ public class Player : MonoBehaviour
         MoveStatus();
 
         // Basic
-        PlayerDirection ();
+        PlayerDirection();
         Duck();
         Move();
         Defend();
@@ -223,27 +223,27 @@ public class Player : MonoBehaviour
     {
         // Player will not move normally if interacting with objects
         playerState.interacting = (interactionState.facingRightNearBlock == true || interactionState.facingLeftNearBlock == true);
-
-        if (controller.collisions.below)
-        {
-            if (hasWalked == false)
-            {
-                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-                    StartCoroutine(HasWalkedRoutine());
-            }
-            if (hasWalked == true)
-            {
-                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-                {
-                    canRun = true;
-                }
-            }
-        }
-
-        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
-        {
-            canRun = false;
-        }
+		canRun = true;
+//        if (controller.collisions.below)
+//        {
+//            if (hasWalked == false)
+//            {
+//                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+//                    StartCoroutine(HasWalkedRoutine());
+//            }
+//            if (hasWalked == true)
+//            {
+//                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+//                {
+//                    canRun = true;
+//                }
+//            }
+//        }
+//
+//        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
+//        {
+//           // canRun = false;
+//        }
     }
 
 
@@ -276,14 +276,11 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-        if (!playerState.interacting && Input.GetAxisRaw("Horizontal") < 0)
-        {
-            playerSpriteRenderer.flipX = true;
-        }
-        else if (!playerState.interacting && Input.GetAxisRaw("Horizontal") > 0)
-        {
-            playerSpriteRenderer.flipX = false;
-        }
+
+		if (!playerState.interacting && directionalInput.x!=0) {
+			playerSpriteRenderer.flipX = (directionalInput.x < 0);
+		}
+
     }
 
 
@@ -367,7 +364,7 @@ public class Player : MonoBehaviour
             }
             else if (playerState.wallJumping)
             {
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 10, 5), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(-wallDirX * 7.5f, 7.5f), ref smoothRef, Time.deltaTime);
             }
             else if (playerState.dashing)
             {
@@ -442,11 +439,10 @@ public class Player : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.DownArrow))
         {
-
             playerState.hanging = false;
             playerState.jumping = true;
         }
-        else  if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
+        else if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
         {
             velocity.x = directionalInput.x;
             playerAnimation.Hang(playerState.hanging);
@@ -507,39 +503,22 @@ public class Player : MonoBehaviour
         }
         else
         {
-            wallDirX = (controller.collisions.left) ? -1 : (controller.collisions.right) ? 1 : 0;
+			wallDirX = (controller.collisions.left) ? -1 : (controller.collisions.right) ? 1 : 0;  
         }
-
         wallSliding = false;
-        playerAnimation.WallSlide(wallSliding);
-        if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y < 0)
+		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y <=0 && directionalInput.x == wallDirX)
         {
-            wallSliding = true;
-            playerAnimation.WallSlide(wallSliding);
-            if (velocity.y < -wallFriction)
-            {
-                velocity.y = -wallFriction;
-            }
-
-            if (timeToWallUnstick > 0)
-            {
-                velocityXSmoothing = 0;
-                velocity.x = 0;
-
-                if (directionalInput.x == -wallDirX)
-                {
-                    timeToWallUnstick -= Time.deltaTime;
-                }
-                else
-                {
-                    timeToWallUnstick = wallStickTime;
-                }
-            }
-            else
-            {
-                timeToWallUnstick = wallStickTime;
-            }
+			wallHoldDuration += Time.deltaTime;
+			if (wallHoldDuration >= wallStickDelay) {
+				wallSliding = true;
+				if (velocity.y < -wallSlideSpeed && directionalInput.y >= 0) {
+					velocity.y = -wallSlideSpeed;
+				} else {
+					velocity.y = -wallSlideSpeed * 2;
+				}
+			}				
         }
+		playerAnimation.WallSlide(wallSliding);
     }
 
 
@@ -547,6 +526,7 @@ public class Player : MonoBehaviour
     {
         if (controller.collisions.below)
         {
+			wallHoldDuration = 0;
             if (!playerState.jumping)
             {
                 jumpCounter = 2;
