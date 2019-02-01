@@ -187,6 +187,11 @@ public class Player : MonoBehaviour
             {
                 wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
+            else if (IsInWater())
+            {
+                jumpCounter = 1;
+                jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));
+            }
             else if (jumpCounter > 0)
             {
                 if (!controller.collisions.slidingDownMaxSlope && !playerState.wallJumping)
@@ -322,6 +327,11 @@ public class Player : MonoBehaviour
         float targetVelocityX;
         moveSpeed = IsInWater() ? 1 : 2;
 
+        if(directionalInput.x == 0 && !IsInWater())
+        {
+            velocity.x = 0;
+        }
+
         if (!playerState.interacting && !playerState.defending && !interactionState.pullingRight && !interactionState.pullingLeft)
         {
             if (!playerState.ducking && !IsInCrawlSpace())
@@ -385,8 +395,8 @@ public class Player : MonoBehaviour
                 {
                     if (!IsGrounded() && Input.GetKey(KeyCode.G))
                     {
-                        // GLide
-                        velocity.y = -2;
+                        // Glide
+                        velocity.y = -1;
                     }
                     else
                     {
@@ -404,24 +414,13 @@ public class Player : MonoBehaviour
 
     public void Climb()
     {
-        if (Input.GetKeyUp(KeyCode.Space) || Input.GetKey(KeyCode.Space))
+      if (directionalInput.y != 0 || directionalInput.x != 0 )
         {
-            playerState.climbing = false;
-            playerState.jumping = true;
-        }
-        else if (Input.GetKey(KeyCode.UpArrow) && !IsOnTopMostLadder())
-        {
-            velocity.y = 2;
-            velocity.x = 0;
-            playerAnimation.Climb(playerState.climbing);
-        }
-        else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            velocity.y = -2;
-            velocity.x = 0;
+            velocity.y = (IsOnTopMostLadder() && directionalInput.y > 0) ? 0 : 2 * directionalInput.y;
+            velocity.x = 2 * directionalInput.x;
             playerAnimation.Climb(playerState.climbing);
 
-            if (IsGrounded())
+            if (IsGrounded() && directionalInput.y == -1)
             {
                 playerState.climbing = false;
                 playerAnimation.Climb(playerState.climbing);
