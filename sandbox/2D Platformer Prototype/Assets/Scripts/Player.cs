@@ -108,9 +108,11 @@ public class Player : MonoBehaviour
 
     // Coroutines
     bool hasWalked;
+    bool hasDodged;
 
     // Status
     public bool canRun;
+    public bool canDodge;
 
     // Block Interaction
     public bool canMoveBlock = false;
@@ -228,27 +230,35 @@ public class Player : MonoBehaviour
     {
         // Player will not move normally if interacting with objects
         playerState.interacting = (interactionState.facingRightNearBlock == true || interactionState.facingLeftNearBlock == true);
-		canRun = true;
-//        if (controller.collisions.below)
-//        {
-//            if (hasWalked == false)
-//            {
-//                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-//                    StartCoroutine(HasWalkedRoutine());
-//            }
-//            if (hasWalked == true)
-//            {
-//                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
-//                {
-//                    canRun = true;
-//                }
-//            }
-//        }
-//
-//        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
-//        {
-//           // canRun = false;
-//        }
+
+        if (controller.collisions.below)
+        {
+            if (hasWalked == false)
+            {
+                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+                    StartCoroutine(HasWalkedRoutine());
+            }
+            if (hasWalked == true)
+            {
+                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+                {
+                    canRun = true;
+                }
+            }
+            if (hasDodged == false && !IsInWater())
+            {
+                if (Input.GetKeyDown(KeyCode.Z) && directionalInput.x == 0)
+                {
+                    StartCoroutine(HasDodgedRoutine());
+                    StartCoroutine(DodgeCooldownRoutine());
+                }
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.RightArrow) || Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            canRun = false;
+        }
     }
 
 
@@ -282,7 +292,7 @@ public class Player : MonoBehaviour
     void PlayerDirection()
     {
 
-		if (!playerState.interacting && directionalInput.x!=0) {
+		if (!playerState.interacting && directionalInput.x != 0) {
 			playerSpriteRenderer.flipX = (directionalInput.x < 0);
 		}
 
@@ -327,6 +337,7 @@ public class Player : MonoBehaviour
         float targetVelocityX;
         moveSpeed = IsInWater() ? 1 : 2;
 
+
         if(directionalInput.x == 0 && !IsInWater())
         {
             velocity.x = 0;
@@ -353,6 +364,11 @@ public class Player : MonoBehaviour
                 {
                     // Run
                     targetVelocityX = directionalInput.x * moveSpeed * 2;
+                }
+
+                if (canDodge && hasDodged && directionalInput.x == 0)
+                {
+                    Dodge();
                 }
             }
             else
@@ -476,6 +492,13 @@ public class Player : MonoBehaviour
             playerState.defending = false;
             playerAnimation.Defend(0);
         }
+    }
+
+
+    public void Dodge()
+    {
+        float dodgeDirection = playerSpriteRenderer.flipX ? 1 : -1;
+        velocity += new Vector2(7.5f * dodgeDirection, 0);
     }
 
 
@@ -729,6 +752,23 @@ public class Player : MonoBehaviour
 		playerState.wallJumping = false;
 	}
 
+    IEnumerator HasDodgedRoutine()
+    {
+        hasDodged = true;
+        yield return new WaitForSeconds(1);
+        hasDodged = false;
+    }
+
+    // Cooldowns
+    IEnumerator DodgeCooldownRoutine()
+    {
+        canDodge = true;
+        playerAnimation.Dodge(canDodge);
+        yield return new WaitForSeconds(0.2f);
+        canDodge = false;
+        playerAnimation.Dodge(canDodge);
+    }
+
 
 
 
@@ -784,12 +824,7 @@ public class Player : MonoBehaviour
     public bool IsOnTopMostLadder()
     {
         RaycastHit2D hitEndOfLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.up, 0.5f, 1 << 11);
-
-        if (hitEndOfLadder.collider == null)
-        {
-            return true;
-        }
-        return false;
+        return hitEndOfLadder.collider == null ? true : false;
     }
 
 
