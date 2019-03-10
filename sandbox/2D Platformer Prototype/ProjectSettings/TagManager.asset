@@ -10,6 +10,7 @@ TagManager:
   - GripCeiling
   - Water
   - WaterSpace
+  - Attack
   layers:
   - Default
   - TransparentFX

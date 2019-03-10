@@ -97,7 +97,7 @@ public class Block : MonoBehaviour
 
     void UpdateCanMoveBlock()
     {
-        if (Input.GetKey(KeyCode.M) && player.IsGrounded() && PlayerIsNearBlock() && !player.playerState.defending)
+		if (Input.GetKey(KeyCode.M) && player.GetComponent<Controller2D>().collisions.below && PlayerIsNearBlock() && !player.playerState.defending)
         {
             player.canRun = false;
             player.canMoveBlock = true;

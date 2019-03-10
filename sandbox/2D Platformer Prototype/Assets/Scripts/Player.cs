@@ -155,7 +155,6 @@ public class Player : MonoBehaviour
         CanHang();
 
         // Raycast Status
-        IsGrounded();
         IsNearWall();
         IsInCrawlSpace();
         IsInWater();
@@ -282,7 +281,7 @@ public class Player : MonoBehaviour
     void PlayerDirection()
     {
 
-		if (!playerState.interacting && directionalInput.x!=0) {
+		if (!playerState.interacting && directionalInput.x!=0 && transform.GetChild(1).GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).IsName("Idle")) {
 			playerSpriteRenderer.flipX = (directionalInput.x < 0);
 		}
 
@@ -393,7 +392,7 @@ public class Player : MonoBehaviour
             {
                 if (!IsInWater())
                 {
-                    if (!IsGrounded() && Input.GetKey(KeyCode.G))
+                    if (!controller.collisions.below && Input.GetKey(KeyCode.G))
                     {
                         // Glide
                         velocity.y = -1;
@@ -420,7 +419,7 @@ public class Player : MonoBehaviour
             velocity.x = 2 * directionalInput.x;
             playerAnimation.Climb(playerState.climbing);
 
-            if (IsGrounded() && directionalInput.y == -1)
+            if (controller.collisions.below && directionalInput.y == -1)
             {
                 playerState.climbing = false;
                 playerAnimation.Climb(playerState.climbing);
@@ -455,7 +454,7 @@ public class Player : MonoBehaviour
 
     public void Defend()
     {
-        if (Input.GetKey(KeyCode.LeftAlt) && IsGrounded())
+        if (Input.GetKey(KeyCode.LeftAlt) && controller.collisions.below)
         {
             playerState.defending = true;
 
@@ -600,7 +599,7 @@ public class Player : MonoBehaviour
                         }
                     }
                     // Swim in the down left or down right direction and down only if a wall is deteced to not go through it
-                    else if (Input.GetKey(KeyCode.DownArrow) && !IsGrounded())
+                    else if (Input.GetKey(KeyCode.DownArrow) && !controller.collisions.below)
                     {
                         if (playerSpriteRenderer.flipX)
                         {
@@ -629,7 +628,7 @@ public class Player : MonoBehaviour
                         SwimDirection(1, Quaternion.Euler(0, 0, 90), true);
                     }
                 }
-                else if (Input.GetKey(KeyCode.DownArrow) && !IsGrounded())
+                else if (Input.GetKey(KeyCode.DownArrow) && !controller.collisions.below)
                 {
                     if (playerSpriteRenderer.flipX)
                     {
@@ -652,7 +651,7 @@ public class Player : MonoBehaviour
                 playerAnimation.FloatInWater(false);
                 playerAnimation.Swim(false);
 
-                if (!IsGrounded())
+                if (!controller.collisions.below)
                 {
                     playerAnimation.Fall(true);
                 }
@@ -736,12 +735,6 @@ public class Player : MonoBehaviour
     // Raycast Status
     // ----------------------------------------
 
-    public bool IsGrounded()
-    {
-        RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
-        RaycastHit2D hitBlock = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 9);
-        return hitGround.collider!= null || hitBlock.collider != null ? true : false;
-    }
 
 
     public bool IsNearWall()
@@ -755,7 +748,7 @@ public class Player : MonoBehaviour
     public bool IsInCrawlSpace()
     {
         RaycastHit2D hitCrawlSpace = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 12);
-        if (hitCrawlSpace.collider != null && IsGrounded())
+        if (hitCrawlSpace.collider != null && controller.collisions.below)
         {
             playerAnimation.InCrawlSpace(true);
             return true;
