@@ -95,10 +95,23 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void ClimbInProfileView(bool climbInProfileView, int speed = 1)
+    {
+        anim.SetBool("ClimbInProfileView", climbInProfileView);
+        anim.speed = speed;
+    }
+
+
     public void Hang(bool hang, int speed = 1)
     {
         anim.SetBool("Hang", hang);
         anim.speed = speed;
+    }
+
+
+    public void HangOnCliff(bool hangOnCliff)
+    {
+        anim.SetBool("HangOnCliff", hangOnCliff);
     }
 
 
