@@ -11,6 +11,13 @@ TextureImporter:
     21300012: ClimbUpCliff_6
     21300014: ClimbUpCliff_7
     21300016: ClimbUpCliff_8
+    21300018: ClimbUpCliff_9
+    21300020: ClimbUpCliff_10
+    21300022: ClimbUpCliff_11
+    21300024: ClimbUpCliff_12
+    21300026: ClimbUpCliff_13
+    21300028: ClimbUpCliff_14
+    21300030: ClimbUpCliff_15
   externalObjects: {}
   serializedVersion: 7
   mipmaps:
@@ -119,7 +126,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 256
+        y: 384
         width: 128
         height: 128
       alignment: 0
@@ -129,7 +136,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c8d9902c584610146b328a4458031b65
+      spriteID: ccbfba94745f46e4699509e5da8069d1
       vertices: []
       indices: 
       edges: []
@@ -139,7 +146,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 256
+        y: 384
         width: 128
         height: 128
       alignment: 0
@@ -149,7 +156,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e771f1e9304f0084f905a58fef74602d
+      spriteID: cf98531cd7317e94a9f3013781a692e3
       vertices: []
       indices: 
       edges: []
@@ -159,6 +166,46 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c7b661d1461559b4a9a309b8a5fbe4f3
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_3
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71dcc3aeb5a8f3244b5451672e960b74
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_4
+      rect:
+        serializedVersion: 2
+        x: 0
         y: 256
         width: 128
         height: 128
@@ -169,47 +216,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 58ddb091e2c49da4b90d9e7c199618d9
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ClimbUpCliff_3
-      rect:
-        serializedVersion: 2
-        x: 0
-        y: 128
-        width: 128
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 703d84039fdbc3446b915d89f4f715fc
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: ClimbUpCliff_4
-      rect:
-        serializedVersion: 2
-        x: 128
-        y: 128
-        width: 128
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: d6fd0087f47721e4bab0e73cefb78c51
+      spriteID: 72879c97871dca140b4974ac7ff6e0ef
       vertices: []
       indices: 
       edges: []
@@ -218,6 +225,106 @@ TextureImporter:
       name: ClimbUpCliff_5
       rect:
         serializedVersion: 2
+        x: 128
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ce978f0a12aade1449976bd4ebde8980
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_6
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a292a470cb9e3404884adaae008bb15f
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_7
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e1b446b49509b6f46af8eb6172499193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_8
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 455335b6edbc45c4b8d94837cfb35e50
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_9
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f83705bf06dec1a458e06fdda7e30685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_10
+      rect:
+        serializedVersion: 2
         x: 256
         y: 128
         width: 128
@@ -229,13 +336,33 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4106c2cb1cbbad24d882fde1e482d119
+      spriteID: 33285fa79c6727b42b5b8b90c2ebe5a2
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ClimbUpCliff_6
+      name: ClimbUpCliff_11
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00d7dc506a67a024b8f5965d69fa7217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_12
       rect:
         serializedVersion: 2
         x: 0
@@ -249,13 +376,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7c9d43e32f89d724caec9f5e485b59fd
+      spriteID: b2b4e47b1c9e47240b21c8b6c9b7fbeb
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ClimbUpCliff_7
+      name: ClimbUpCliff_13
       rect:
         serializedVersion: 2
         x: 128
@@ -269,13 +396,13 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 614cb789dbb9d3e47888beb5b63cdec6
+      spriteID: 6852cff6ef3fe6c44bacc070524bb132
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ClimbUpCliff_8
+      name: ClimbUpCliff_14
       rect:
         serializedVersion: 2
         x: 256
@@ -289,7 +416,27 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5d1ee9baa0f9bda45ba232ae4b8507f0
+      spriteID: 21566dc55aa76f7469ce30c3530fd6ad
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ClimbUpCliff_15
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35315de7a6f6b8b4aa136a2db0ef3428
       vertices: []
       indices: 
       edges: []

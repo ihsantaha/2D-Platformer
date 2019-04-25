@@ -73,6 +73,7 @@ public class Player : MonoBehaviour
     public PlayerStates playerState;
     public InteractionStates interactionState;
     public PlayerAnimation playerAnimation;
+    public Animator playerAnimator;
     public Vector2 velocity;
 
     // Class Variables
@@ -112,6 +113,7 @@ public class Player : MonoBehaviour
     // Coroutines
     bool hasWalked;
     bool hasDodged;
+    bool hasClimbedUpCliff;
 
     // Status
     public bool canRun;
@@ -119,6 +121,10 @@ public class Player : MonoBehaviour
 
     // Block Interaction
     public bool canMoveBlock = false;
+
+    // For Testing
+    public bool test;
+    public bool flag;
 
 
 
@@ -131,6 +137,7 @@ public class Player : MonoBehaviour
 	{
         playerSpriteTransform = GetComponentInChildren<Transform>();
         playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        playerAnimator = GetComponentInChildren<Animator>();
         playerAnimation = GetComponent<PlayerAnimation>();
 
         controller = GetComponent<Controller2D> ();
@@ -173,6 +180,9 @@ public class Player : MonoBehaviour
 
         // Animation Speed
         IsNotHangingNorClimbing();
+
+        // Animation Transition Support
+        CliffWallToCliffSurface();
     }
 
 
@@ -196,7 +206,7 @@ public class Player : MonoBehaviour
             {
                 wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
-            else if (IsInWater())
+            else if (IsInWater() || IsHangingOnCliff())
             {
                 jumpCounter = 1;
                 jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));
@@ -510,14 +520,10 @@ public class Player : MonoBehaviour
 
     public void HangOnCliff()
     {
-        playerAnimation.HangOnCliff(playerState.hangingOnCliff);
-
         if (Input.GetKeyDown(KeyCode.H))
         {
-            Debug.Log("Get Up");
-            transform.position = new Vector3(transform.position.x +0.5f, transform.position.y + 1, transform.position.z);
+            playerAnimation.ClimbUpCliff();
             playerState.hangingOnCliff = false;
-            playerAnimation.HangOnCliff(playerState.hangingOnCliff);
         } else if (Input.GetKeyUp(KeyCode.UpArrow))
         {
             playerState.hangingOnCliff = false;
@@ -591,7 +597,7 @@ public class Player : MonoBehaviour
 		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y <=0 && directionalInput.x == wallDirX)
         {
 			wallHoldDuration += Time.deltaTime;
-			if (wallHoldDuration >= wallStickDelay) {
+			if (wallHoldDuration >= wallStickDelay && !IsHangingOnCliff()) {
 				wallSliding = true;
 				if (velocity.y < -wallSlideSpeed && directionalInput.y >= 0) {
 					velocity.y = -wallSlideSpeed;
@@ -778,9 +784,10 @@ public class Player : MonoBehaviour
 
     public void CanHangOnCliff()
     {
-        if (IsHangingOnCliff() && Input.GetKey(KeyCode.UpArrow))
+        if ((IsHangingOnCliff() && Input.GetKey(KeyCode.UpArrow)) || playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("ClimbUpCliff"))
         {
             playerState.hangingOnCliff = true;
+            playerAnimation.HangOnCliff(playerState.hangingOnCliff);
         } else
         {
             playerState.hangingOnCliff = false;
@@ -972,7 +979,27 @@ public class Player : MonoBehaviour
 
     public bool IsHangingOnCliff()
     {
-        RaycastHit2D hitCliff = Physics2D.Raycast(transform.position + new Vector3(direction * 0.2f, 0.32f, 0), Vector2.down, 0.1f, 1 << 8);
-        return hitCliff.collider != null ? true : false;
+        RaycastHit2D hitCliff = Physics2D.Raycast(transform.position + new Vector3(direction * 0.2f, 0.325f, 0), Vector2.down, 0.1f, 1 << 8);
+        return (hitCliff.collider != null && IsNearWall()) ? true : false;
+    }
+
+
+
+
+    // --------------------------------------------------------------------------------
+    // Animation Support
+    // --------------------------------------------------------------------------------
+
+    public void CliffWallToCliffSurface() {
+        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("ClimbUpCliff"))
+        {
+            flag = true;
+            hasClimbedUpCliff = true;
+        }
+        else if (hasClimbedUpCliff == true && flag == true)
+        {
+            transform.Translate(new Vector3(direction * 0.5f, 1, transform.position.z));
+            flag = false;
+        }
     }
 }

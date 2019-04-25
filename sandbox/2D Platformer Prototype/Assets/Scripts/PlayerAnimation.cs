@@ -127,6 +127,12 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void ClimbUpCliff()
+    {
+        anim.SetTrigger("ClimbUpCliff");
+    }
+
+
     public void Attack()
     {
         anim.SetTrigger("Attack");
