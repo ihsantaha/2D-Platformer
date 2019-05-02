@@ -25,7 +25,9 @@ public class Player : MonoBehaviour
 		public bool jumping;
 		public bool wallJumping;
         public bool climbing;
+        public bool climbingInProfileView;
         public bool hanging;
+        public bool hangingOnCliff;
 
         public object playerStateRef;
 
@@ -71,6 +73,7 @@ public class Player : MonoBehaviour
     public PlayerStates playerState;
     public InteractionStates interactionState;
     public PlayerAnimation playerAnimation;
+    public Animator playerAnimator;
     public Vector2 velocity;
 
     // Class Variables
@@ -101,6 +104,7 @@ public class Player : MonoBehaviour
     float wallStickDelay = .1f;
 	float wallHoldDuration;
 
+    int direction;
     int wallDirX;
     int jumpCounter;
 
@@ -109,6 +113,7 @@ public class Player : MonoBehaviour
     // Coroutines
     bool hasWalked;
     bool hasDodged;
+    bool hasClimbedUpCliff;
 
     // Status
     public bool canRun;
@@ -116,6 +121,10 @@ public class Player : MonoBehaviour
 
     // Block Interaction
     public bool canMoveBlock = false;
+
+    // For Testing
+    public bool test;
+    public bool flag;
 
 
 
@@ -128,6 +137,7 @@ public class Player : MonoBehaviour
 	{
         playerSpriteTransform = GetComponentInChildren<Transform>();
         playerSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        playerAnimator = GetComponentInChildren<Animator>();
         playerAnimation = GetComponent<PlayerAnimation>();
 
         controller = GetComponent<Controller2D> ();
@@ -154,7 +164,9 @@ public class Player : MonoBehaviour
         CheckVerticalCollisions();
         CheckWaterCollision();
         CanClimb();
+        CanClimbInProfileView();
         CanHang();
+        CanHangOnCliff();
 
         // Raycast Status
         IsGrounded();
@@ -162,10 +174,15 @@ public class Player : MonoBehaviour
         IsInCrawlSpace();
         IsInWater();
         IsInClimbableSpace();
+        IsInClimbableSpaceInProfileView();
         IsUnderGripCeiling();
+        IsHangingOnCliff();
 
         // Animation Speed
         IsNotHangingNorClimbing();
+
+        // Animation Transition Support
+        CliffWallToCliffSurface();
     }
 
 
@@ -189,7 +206,7 @@ public class Player : MonoBehaviour
             {
                 wallJumpTimer = StartCoroutine(WallJumpRoutine());
             }
-            else if (IsInWater())
+            else if (IsInWater() || IsHangingOnCliff())
             {
                 jumpCounter = 1;
                 jumpTimer = StartCoroutine(Timer(0.2f, "jumping"));
@@ -268,6 +285,10 @@ public class Player : MonoBehaviour
         {
             playerAnimation.Climb(playerState.climbing, 0);
         }
+        if ((playerState.climbingInProfileView && velocity.y == 0) || (playerState.climbingInProfileView && directionalInput.y == 0 && directionalInput.x != 0))
+        {
+            playerAnimation.ClimbInProfileView(playerState.climbingInProfileView, 0);
+        }
         if (playerState.hanging && velocity.x == 0)
         {
             playerAnimation.Hang(playerState.hanging, 0);
@@ -291,11 +312,11 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-
 		if (!playerState.interacting && directionalInput.x != 0) {
-			playerSpriteRenderer.flipX = (directionalInput.x < 0);
+		    playerSpriteRenderer.flipX = (directionalInput.x < 0);
 		}
 
+        direction = playerSpriteRenderer.flipX ? -1 : 1;
     }
 
 
@@ -336,7 +357,6 @@ public class Player : MonoBehaviour
     {
         float targetVelocityX;
         moveSpeed = IsInWater() ? 1 : 2;
-
 
         if(directionalInput.x == 0 && !IsInWater())
         {
@@ -395,15 +415,22 @@ public class Player : MonoBehaviour
             else if (playerState.dashing)
             {
                 // Slide
-                velocity = Vector2.SmoothDamp(velocity, new Vector2(controller.collisions.faceDir * 7.5f, velocity.y), ref smoothRef, Time.deltaTime);
+                velocity = Vector2.SmoothDamp(velocity, new Vector2(direction * 7.5f, velocity.y), ref smoothRef, Time.deltaTime);
             }
-            else if (playerState.climbing && IsInClimbableSpace())
+            else if (playerState.climbing)
             {
                 Climb();
+            }
+            else if (playerState.climbingInProfileView)
+            {
+                ClimbInProfileView();
             }
             else if (playerState.hanging && IsUnderGripCeiling())
             {
                 Hang();
+            } else if (playerState.hangingOnCliff)
+            {
+                HangOnCliff();
             }
             else
             {
@@ -450,6 +477,28 @@ public class Player : MonoBehaviour
     }
 
 
+    public void ClimbInProfileView()
+    {
+        if (directionalInput.y != 0 || directionalInput.x != 0)
+        {
+            velocity.y = (IsOnTopMostSideLadder() && directionalInput.y > 0) ? 0 : 2 * directionalInput.y;
+            velocity.x = 2 * directionalInput.x;
+            playerAnimation.ClimbInProfileView(playerState.climbingInProfileView);
+
+            if (IsGrounded() && directionalInput.y == -1)
+            {
+                playerState.climbingInProfileView = false;
+                playerAnimation.ClimbInProfileView(playerState.climbingInProfileView);
+            }
+        }
+        else
+        {
+            velocity.y = 0;
+            velocity.x = 0;
+        }
+    }
+
+
     public void Hang()
     {
         if (Input.GetKey(KeyCode.DownArrow))
@@ -463,6 +512,23 @@ public class Player : MonoBehaviour
             playerAnimation.Hang(playerState.hanging);
         }
         else
+        {
+            velocity = Vector2.zero;
+        }
+    }
+
+
+    public void HangOnCliff()
+    {
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            playerAnimation.ClimbUpCliff();
+            playerState.hangingOnCliff = false;
+        } else if (Input.GetKeyUp(KeyCode.UpArrow))
+        {
+            playerState.hangingOnCliff = false;
+            playerAnimation.HangOnCliff(playerState.hangingOnCliff);
+        } else
         {
             velocity = Vector2.zero;
         }
@@ -531,7 +597,7 @@ public class Player : MonoBehaviour
 		if ((controller.collisions.left || controller.collisions.right) && !controller.collisions.below && velocity.y <=0 && directionalInput.x == wallDirX)
         {
 			wallHoldDuration += Time.deltaTime;
-			if (wallHoldDuration >= wallStickDelay) {
+			if (wallHoldDuration >= wallStickDelay && !IsHangingOnCliff()) {
 				wallSliding = true;
 				if (velocity.y < -wallSlideSpeed && directionalInput.y >= 0) {
 					velocity.y = -wallSlideSpeed;
@@ -698,11 +764,34 @@ public class Player : MonoBehaviour
     }
 
 
+    public void CanClimbInProfileView()
+    {
+        if (IsInClimbableSpaceInProfileView() && Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            playerState.climbingInProfileView = true;
+        }
+    }
+
+
     public void CanHang()
     {
         if (IsUnderGripCeiling() && Input.GetKey(KeyCode.UpArrow))
         {
             playerState.hanging = true;
+        }
+    }
+
+
+    public void CanHangOnCliff()
+    {
+        if ((IsHangingOnCliff() && Input.GetKey(KeyCode.UpArrow)) || playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("ClimbUpCliff"))
+        {
+            playerState.hangingOnCliff = true;
+            playerAnimation.HangOnCliff(playerState.hangingOnCliff);
+        } else
+        {
+            playerState.hangingOnCliff = false;
+            playerAnimation.HangOnCliff(playerState.hangingOnCliff);
         }
     }
 
@@ -780,7 +869,7 @@ public class Player : MonoBehaviour
     {
         RaycastHit2D hitGround = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 8);
         RaycastHit2D hitBlock = Physics2D.Raycast(transform.position, Vector2.down, 0.55f, 1 << 9);
-        return hitGround.collider!= null || hitBlock.collider != null ? true : false;
+        return hitGround.collider != null || hitBlock.collider != null ? true : false;
     }
 
 
@@ -819,7 +908,23 @@ public class Player : MonoBehaviour
         playerAnimation.Climb(playerState.climbing);
         return false;
     }
-    
+
+
+    public bool IsInClimbableSpaceInProfileView()
+    {
+        RaycastHit2D hitClimbInProfileViewRight = Physics2D.Raycast(transform.position, Vector2.right, 0.1f, 1 << 15);
+        RaycastHit2D hitClimbInProfileViewLeft = Physics2D.Raycast(transform.position, Vector2.left, 0.1f, 1 << 15);
+
+        if (hitClimbInProfileViewLeft.collider != null || hitClimbInProfileViewRight.collider != null)
+        {
+            return true;
+        }
+
+        playerState.climbingInProfileView = false;
+        playerAnimation.ClimbInProfileView(playerState.climbingInProfileView);
+        return false;
+    }
+
 
     public bool IsOnTopMostLadder()
     {
@@ -828,9 +933,17 @@ public class Player : MonoBehaviour
     }
 
 
+    public bool IsOnTopMostSideLadder()
+    {
+        RaycastHit2D hitEndOfRightSideLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.right, 0.25f, 1 << 15);
+        RaycastHit2D hitEndOfLeftSideLadder = Physics2D.Raycast(transform.position + Vector3.up * 0.5f, Vector2.left, 0.25f, 1 << 15);
+        return (hitEndOfRightSideLadder.collider == null && hitEndOfLeftSideLadder.collider == null) ? true : false;
+    }
+
+
     public bool IsUnderGripCeiling()
     {
-        RaycastHit2D hitGripCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.5f, 1 << 13);
+        RaycastHit2D hitGripCeiling = Physics2D.Raycast(transform.position, Vector2.up, 0.51f, 1 << 13);
 
         if (hitGripCeiling.collider != null)
         {
@@ -860,7 +973,33 @@ public class Player : MonoBehaviour
     public bool IsOnWaterSurface()
     {
         RaycastHit2D hitSurface = Physics2D.Raycast(transform.position + Vector3.up * 0.7f, Vector2.up, 0.55f, 1 << 14);
-
         return hitSurface.collider == null ? true : false;
+    }
+
+
+    public bool IsHangingOnCliff()
+    {
+        RaycastHit2D hitCliff = Physics2D.Raycast(transform.position + new Vector3(direction * 0.2f, 0.325f, 0), Vector2.down, 0.1f, 1 << 8);
+        return (hitCliff.collider != null && IsNearWall()) ? true : false;
+    }
+
+
+
+
+    // --------------------------------------------------------------------------------
+    // Animation Support
+    // --------------------------------------------------------------------------------
+
+    public void CliffWallToCliffSurface() {
+        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("ClimbUpCliff"))
+        {
+            flag = true;
+            hasClimbedUpCliff = true;
+        }
+        else if (hasClimbedUpCliff == true && flag == true)
+        {
+            transform.Translate(new Vector3(direction * 0.5f, 1, transform.position.z));
+            flag = false;
+        }
     }
 }
