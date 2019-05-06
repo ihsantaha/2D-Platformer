@@ -21,6 +21,9 @@ public class Player : MonoBehaviour
         public bool defendingUpwards;
         public bool defendingDownwards;
 
+        public bool hasWeapon;
+        public bool swordDrawn;
+
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
@@ -49,7 +52,7 @@ public class Player : MonoBehaviour
         public bool pushingRight;
         public bool pushingLeft;
         public bool pullingRight;
-        public bool pullingLeft;
+        public bool pullingLeft; 
 
         public object playerStateRef;
 
@@ -145,6 +148,8 @@ public class Player : MonoBehaviour
 		colliderHeight = boxCollider.size.y;
 
         gravity = -40;
+
+        playerState.hasWeapon = true;
 	}
 
 
@@ -183,6 +188,10 @@ public class Player : MonoBehaviour
 
         // Animation Transition Support
         CliffWallToCliffSurface();
+
+        // Weapon
+        DrawSword();
+        SwordAttack1();
     }
 
 
@@ -276,6 +285,12 @@ public class Player : MonoBehaviour
         {
             canRun = false;
         }
+
+        // Player will not move if attacking
+        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1"))
+        {
+            velocity.x = 0;
+        }
     }
 
 
@@ -312,7 +327,7 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-		if (!playerState.interacting && directionalInput.x != 0) {
+		if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1") && !playerState.interacting && directionalInput.x != 0) {
 		    playerSpriteRenderer.flipX = (directionalInput.x < 0);
 		}
 
@@ -570,6 +585,7 @@ public class Player : MonoBehaviour
 
 
 
+    
     // --------------------------------------------------------------------------------
     // Interaction Movement
     // --------------------------------------------------------------------------------
@@ -1000,6 +1016,38 @@ public class Player : MonoBehaviour
         {
             transform.Translate(new Vector3(direction * 0.5f, 1, transform.position.z));
             flag = false;
+        }
+    }
+
+
+
+
+    // --------------------------------------------------------------------------------
+    // Weapon
+    // --------------------------------------------------------------------------------
+
+    void DrawSword()
+    {
+        if (Input.GetKeyDown(KeyCode.F) && playerState.hasWeapon)
+        {
+            if (!playerState.swordDrawn)
+            {
+                playerAnimation.drawSword();
+                playerState.swordDrawn = true;
+            }
+            else
+            {
+                playerAnimation.returnSword();
+                playerState.swordDrawn = false;
+            }
+        }
+    }
+
+    void SwordAttack1()
+    {
+        if (Input.GetKeyDown(KeyCode.LeftControl) && playerState.hasWeapon)
+        {
+            playerAnimation.SwordAttack1();
         }
     }
 }

@@ -133,8 +133,20 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
-    public void Attack()
+    public void drawSword()
     {
-        anim.SetTrigger("Attack");
+        anim.SetTrigger("DrawSword");
+    }
+
+
+    public void returnSword()
+    {
+        anim.SetTrigger("ReturnSword");
+    }
+
+
+    public void SwordAttack1()
+    {
+        anim.SetTrigger("SwordAttack1");
     }
 }
