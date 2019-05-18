@@ -177,6 +177,15 @@ public class Player : MonoBehaviour
         directionalInput = input;
     }
 
+    public void OnAttackInputDown() {
+
+        if (directionalInput.y < 0) {
+            jumpCounter = 0;
+            velocity.y = -20f;
+        }
+
+    }
+
 
     public void OnJumpInputDown()
     {
@@ -232,7 +241,7 @@ public class Player : MonoBehaviour
 //        {
 //            if (hasWalked == false)
 //            {
-//                if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
+//                if (Input.GetKeyDown(zRightArrow) || Input.GetKeyDown(KeyCode.LeftArrow))
 //                    StartCoroutine(HasWalkedRoutine());
 //            }
 //            if (hasWalked == true)
@@ -266,8 +275,11 @@ public class Player : MonoBehaviour
 
     public void SwimDirection(float direction, Quaternion angle, bool swim)
     {
-        velocity.x = direction;
-        playerSpriteTransform.rotation = angle;
+        
+        velocity =  angle * new Vector2(direction, 0);
+        Debug.Log(velocity);
+        //velocity.x = direction;
+        //playerSpriteTransform.rotation = angle;
         playerAnimation.Swim(swim);
     }
 
@@ -566,91 +578,25 @@ public class Player : MonoBehaviour
     {
         if (IsInWater())
         {
+            Debug.Log(controller.collisions.below);
+            // Play float in water animation if no directional input is detected
+            playerAnimation.FloatInWater(velocity == Vector2.zero && Input.GetKey(KeyCode.C));
             if (Input.GetKey(KeyCode.C))
             {
+                //lock gravity
                 velocity.y = 0;
-
-                // Play float in water animation if no directional input is detected
-                if (!Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow) &&
-                    !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow))
-                {
-                    playerAnimation.FloatInWater(true);
-                } else
-                {
-                    playerAnimation.FloatInWater(false);
+                int polarity = playerSpriteRenderer.flipX ? -1 : 1;
+                int force = directionalInput != Vector2.zero ? 1 : 0;
+                if (directionalInput.y > 0){
+                    force = !IsOnWaterSurface() ? force : 0;
                 }
-
-                if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.LeftArrow))
-                {
-                    int angle;
-
-                    // Swim in the up left or up right direction and up only if a wall is deteced to not go through it
-                    if (Input.GetKey(KeyCode.UpArrow) && !IsOnWaterSurface())
-                    {
-                        if (playerSpriteRenderer.flipX)
-                        {
-                            angle = IsNearWall() ? -90 : -45;
-                            SwimDirection(-1, Quaternion.Euler(0, 0, angle), true);
-                        }
-                        else
-                        {
-                            angle = IsNearWall() ? 90 : 45;
-                            SwimDirection(1, Quaternion.Euler(0, 0, angle), true);
-                        }
-                    }
-                    // Swim in the down left or down right direction and down only if a wall is deteced to not go through it
-                    else if (Input.GetKey(KeyCode.DownArrow) && !controller.collisions.below)
-                    {
-                        if (playerSpriteRenderer.flipX)
-                        {
-                            angle = IsNearWall() ?  90 : 45;
-                            SwimDirection(-1, Quaternion.Euler(0, 0, angle), true);
-                        }
-                        else
-                        {
-                            angle = IsNearWall() ?  -90 : -45;
-                            SwimDirection(1, Quaternion.Euler(0, 0, angle), true);
-                        }
-                    }
-                    else
-                    {
-                        SwimDirection(directionalInput.x, Quaternion.Euler(0, 0, 0), true);
-                    }
-                }
-                else if (Input.GetKey(KeyCode.UpArrow) && !IsOnWaterSurface())
-                {
-                    if (playerSpriteRenderer.flipX)
-                    {
-                        SwimDirection(-1, Quaternion.Euler(0, 0, -90), true);
-                    }
-                    else
-                    {
-                        SwimDirection(1, Quaternion.Euler(0, 0, 90), true);
-                    }
-                }
-                else if (Input.GetKey(KeyCode.DownArrow) && !controller.collisions.below)
-                {
-                    if (playerSpriteRenderer.flipX)
-                    {
-                        SwimDirection(-1, Quaternion.Euler(0, 0, 90), true);
-                    }
-                    else
-                    {
-                        SwimDirection(1, Quaternion.Euler(0, 0, -90), true);
-                    }
-                }
-                else
-                {
-                    SwimDirection(0, Quaternion.Euler(0, 0, 0), false);
-                }
+                float angle = directionalInput.x==0 ? directionalInput.y*90*force*polarity : directionalInput.y * 45 * force*polarity;
+                SwimDirection(polarity*force, Quaternion.Euler(0, 0, angle), force!=0);     
             }
             else
             {
                 velocity.y = -0.4f;
-                playerSpriteTransform.rotation = Quaternion.Euler(0, 0, 0);
-                playerAnimation.FloatInWater(false);
-                playerAnimation.Swim(false);
-
+                SwimDirection(0,Quaternion.Euler(0, 0, 0),false);
                 if (!controller.collisions.below)
                 {
                     playerAnimation.Fall(true);
@@ -700,18 +646,9 @@ public class Player : MonoBehaviour
     IEnumerator Timer(float delay,string property){
         playerState.SetBool(property, true);
 
-        if (property == "dashing")
-        {
-            playerAnimation.Slide(true);
-        }
-
         yield return new WaitForSeconds(delay);
         playerState.SetBool(property, false);
 
-        if (property == "dashing")
-        {
-            playerAnimation.Slide(false);
-        }     
     }
 
     IEnumerator JumpRoutine()
@@ -748,13 +685,9 @@ public class Player : MonoBehaviour
     public bool IsInCrawlSpace()
     {
         RaycastHit2D hitCrawlSpace = Physics2D.Raycast(transform.position, Vector2.up, 0.55f, 1 << 12);
-        if (hitCrawlSpace.collider != null && controller.collisions.below)
-        {
-            playerAnimation.InCrawlSpace(true);
-            return true;
-        }
-        playerAnimation.InCrawlSpace(false);
-        return false;
+        bool isInCrawlSpace = hitCrawlSpace.collider != null && controller.collisions.below;
+        playerAnimation.InCrawlSpace(isInCrawlSpace);
+        return isInCrawlSpace;
     }
 
 
