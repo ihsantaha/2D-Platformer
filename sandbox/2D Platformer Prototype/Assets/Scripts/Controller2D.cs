@@ -126,7 +126,8 @@ public class Controller2D : RaycastController2D
 	}
 
 
-	void Horizontalcollisions(ref Vector2 moveAmount)
+
+    void Horizontalcollisions(ref Vector2 moveAmount)
 	{
 		float directionX = collisions.faceDir;
 		float rayLength = Mathf.Abs(moveAmount.x) + padding;
@@ -136,7 +137,7 @@ public class Controller2D : RaycastController2D
 			rayOrigin += Vector2.up * (horizontalRaySpacing * i);
 			RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * directionX, rayLength, collisionMask);
 
-			if (hit) {
+            if (hit) {
 				float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
 
 				// Use the bottom most horizontal raycast to calculate slope angles

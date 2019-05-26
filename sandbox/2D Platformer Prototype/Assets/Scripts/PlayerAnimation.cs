@@ -95,10 +95,23 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
+    public void ClimbInProfileView(bool climbInProfileView, int speed = 1)
+    {
+        anim.SetBool("ClimbInProfileView", climbInProfileView);
+        anim.speed = speed;
+    }
+
+
     public void Hang(bool hang, int speed = 1)
     {
         anim.SetBool("Hang", hang);
         anim.speed = speed;
+    }
+
+
+    public void HangOnCliff(bool hangOnCliff)
+    {
+        anim.SetBool("HangOnCliff", hangOnCliff);
     }
 
 
@@ -114,8 +127,26 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
-    public void Attack()
+    public void ClimbUpCliff()
     {
-        anim.SetTrigger("Attack");
+        anim.SetTrigger("ClimbUpCliff");
+    }
+
+
+    public void drawSword()
+    {
+        anim.SetTrigger("DrawSword");
+    }
+
+
+    public void returnSword()
+    {
+        anim.SetTrigger("ReturnSword");
+    }
+
+
+    public void SwordAttack1()
+    {
+        anim.SetTrigger("SwordAttack1");
     }
 }
