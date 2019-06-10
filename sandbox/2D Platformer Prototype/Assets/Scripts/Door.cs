@@ -11,7 +11,9 @@ public class Door : MonoBehaviour
     private Rigidbody2D rB2D;
     private Animator anim;
     private Player player;
+    private Inventory inventory;
     private string status;
+    public bool isLocked;
 
     // --------------------------------------------------------------------------------
     // Methods
@@ -22,6 +24,7 @@ public class Door : MonoBehaviour
         anim = GetComponent<Animator>();
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
         status = "closed";
+        inventory = GameObject.FindGameObjectWithTag("Player").GetComponent<Inventory>();
     }
 	
 
@@ -29,22 +32,34 @@ public class Door : MonoBehaviour
         Transfer();
         Open();
         Close();
-	}
+    }
 
 
     bool Transfer()
     {
-        return false;
-    }
+            return false;
+        }
 
 
     void Open()
     {
-        if (IsNearPlayer() && Input.GetKeyDown(KeyCode.O) && status == "closed")
+        if (IsNearPlayer() && Input.GetKeyDown(KeyCode.O))
         {
-            status = "opened";
-            anim.SetTrigger("Open");
-            StartCoroutine(Fade());
+            if (status == "closed")
+            {
+                if (!(isLocked == true && !itemCheck("Key")))
+                {
+                    isLocked = false;
+                    inventory.useItem("Key");
+                }
+            }
+            if (isLocked == false || status == "opened")
+            {
+                status = "opened";
+                anim.SetTrigger("Open");
+                StartCoroutine(Fade());
+                inventory.slots[0] = null;
+            }
         }
     }
 
@@ -65,10 +80,20 @@ public class Door : MonoBehaviour
         player.transform.position = new Vector3(test.transform.position.x, test.transform.position.y);
         yield return new WaitForSeconds(fadeTime);
         GameObject.Find("Fade").GetComponent<Fading>().OnLevelWasLoaded();
-        status = "closed";
-        anim.SetTrigger("Close");
-
     }
+
+    bool itemCheck(string gameObject)
+    {
+        for (int i = 0; i < inventory.slots.Length; i++ )
+        {
+            if (inventory.isFull[i] == true && inventory.slots[i].name == gameObject)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     // void RotateToSide(bool rotateToSide)
     // {
