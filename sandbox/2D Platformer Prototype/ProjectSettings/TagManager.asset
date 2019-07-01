@@ -10,6 +10,7 @@ TagManager:
   - GripCeiling
   - Water
   - WaterSpace
+  - Fireball_1
   layers:
   - Default
   - TransparentFX

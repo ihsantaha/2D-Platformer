@@ -8,9 +8,9 @@ public class Door : MonoBehaviour
     // Fields
     // --------------------------------------------------------------------------------
 
-    private Rigidbody2D rB2D;
+    // private Rigidbody2D rB2D;
     private Animator anim;
-    private Player player;
+    // private Player player;
     private string status;
 
     // --------------------------------------------------------------------------------
@@ -18,9 +18,9 @@ public class Door : MonoBehaviour
     // --------------------------------------------------------------------------------
 
     void Start () {
-        rB2D = GetComponent<Rigidbody2D>();
+        // rB2D = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        player = GameObject.FindWithTag("Player").GetComponent<Player>();
+        // player = GameObject.FindWithTag("Player").GetComponent<Player>();
         status = "closed";
     }
 	

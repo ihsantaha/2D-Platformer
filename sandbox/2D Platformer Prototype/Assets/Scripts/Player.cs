@@ -21,9 +21,6 @@ public class Player : MonoBehaviour
         public bool defendingUpwards;
         public bool defendingDownwards;
 
-        public bool hasWeapon;
-        public bool swordDrawn;
-
         public bool floating;
 		public bool jumping;
 		public bool wallJumping;
@@ -32,7 +29,10 @@ public class Player : MonoBehaviour
         public bool hanging;
         public bool hangingOnCliff;
 
+        public bool castingMagic;
+
         public object playerStateRef;
+
 
         public void SetBool(string field, bool value)
         {
@@ -97,9 +97,9 @@ public class Player : MonoBehaviour
     float maxJumpVelocity;
 	float minJumpVelocity;
 	float velocityXSmoothing;
-	float velocityYSmoothing;
+	float velocityYSmoothing = 0;
     float moveSpeed = 4;
-    float dashSpeed = 30;
+    // float dashSpeed = 30;
     float accelerationTimeAirborne = .2f;
     float accelerationTimeGrounded = .1f;
 
@@ -107,7 +107,7 @@ public class Player : MonoBehaviour
     float wallStickDelay = .1f;
 	float wallHoldDuration;
 
-    int direction;
+    public int direction;
     int wallDirX;
     int jumpCounter;
 
@@ -117,16 +117,23 @@ public class Player : MonoBehaviour
     bool hasWalked;
     bool hasDodged;
     bool hasClimbedUpCliff;
+    bool hasInitiatedCombo1Availability;
+    bool hasInitiatedCombo2Availability;
+    bool hasInitiatedCombo3Availability;
 
     // Status
     public bool canRun;
     public bool canDodge;
+    public bool canDrawWeapon;
+    public bool canCastMagic;
+    public bool magicCooldownComplete;
+    public string currentMagicType;
+    // public bool swordDrawn;
 
     // Block Interaction
     public bool canMoveBlock = false;
 
     // For Testing
-    public bool test;
     public bool flag;
 
 
@@ -149,7 +156,10 @@ public class Player : MonoBehaviour
 
         gravity = -40;
 
-        playerState.hasWeapon = true;
+        canDrawWeapon = true;
+        canCastMagic = true;
+        currentMagicType = "FireballAttack1";
+        magicCooldownComplete = true;
 	}
 
 
@@ -190,8 +200,12 @@ public class Player : MonoBehaviour
         CliffWallToCliffSurface();
 
         // Weapon
-        DrawSword();
-        SwordAttack1();
+        // DrawSword();
+        SwordAttack();
+
+        // Magic
+        // ToggleMagic();
+        MagicAttack();
     }
 
 
@@ -287,7 +301,9 @@ public class Player : MonoBehaviour
         }
 
         // Player will not move if attacking
-        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1"))
+        if (playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1") || 
+            playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("DuckSwordAttack") ||
+            playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("EarthAttack1"))
         {
             velocity.x = 0;
         }
@@ -327,7 +343,11 @@ public class Player : MonoBehaviour
 
     void PlayerDirection()
     {
-		if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1") && !playerState.interacting && directionalInput.x != 0) {
+		if (!playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("SwordAttack1") && 
+            !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("DuckSwordAttack") &&
+            !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("JumpSwordAttack") &&
+            !playerAnimator.GetCurrentAnimatorStateInfo(0).IsName("EarthAttack1") &&
+            !playerState.interacting && directionalInput.x != 0) {
 		    playerSpriteRenderer.flipX = (directionalInput.x < 0);
 		}
 
@@ -864,6 +884,29 @@ public class Player : MonoBehaviour
         hasDodged = false;
     }
 
+    IEnumerator HasInitiatedCombo1Availability()
+    {
+        hasInitiatedCombo1Availability = true;
+        yield return new WaitForSeconds(0.5f);
+        hasInitiatedCombo1Availability = false;
+    }
+
+    IEnumerator HasInitiatedCombo2Availability()
+    {
+        hasInitiatedCombo2Availability = true;
+        yield return new WaitForSeconds(0.5f);
+        hasInitiatedCombo2Availability = false;
+        playerAnimation.Combo2(hasInitiatedCombo2Availability);
+    }
+
+    IEnumerator HasInitiatedCombo3Availability()
+    {
+        hasInitiatedCombo3Availability = true;
+        yield return new WaitForSeconds(0.5f);
+        hasInitiatedCombo3Availability = false;
+        playerAnimation.Combo3(hasInitiatedCombo3Availability);
+    }
+
     // Cooldowns
     IEnumerator DodgeCooldownRoutine()
     {
@@ -872,6 +915,13 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         canDodge = false;
         playerAnimation.Dodge(canDodge);
+    }
+
+    IEnumerator MagicCooldownRoutine()
+    {
+        magicCooldownComplete = false;
+        yield return new WaitForSeconds(2);
+        magicCooldownComplete = true;
     }
 
 
@@ -1026,28 +1076,72 @@ public class Player : MonoBehaviour
     // Weapon
     // --------------------------------------------------------------------------------
 
-    void DrawSword()
+    // void DrawSword()
+    // {
+    //    if (Input.GetKeyDown(KeyCode.F) && playerState.hasWeapon)
+    //    {
+    //        if (!playerState.swordDrawn)
+    //        {
+    //            playerAnimation.drawSword();
+    //            playerState.swordDrawn = true;
+    //        }
+    //        else
+    //        {
+    //            playerAnimation.returnSword();
+    //            playerState.swordDrawn = false;
+    //        }
+    //    }
+    // }
+
+    void SwordAttack()
     {
-        if (Input.GetKeyDown(KeyCode.F) && playerState.hasWeapon)
+        if (Input.GetKeyDown(KeyCode.LeftControl))
         {
-            if (!playerState.swordDrawn)
+            if (playerState.ducking)
             {
-                playerAnimation.drawSword();
-                playerState.swordDrawn = true;
+                playerAnimation.SwordAttack("DuckSwordAttack");
+            }
+            else if (!IsGrounded())
+            {
+                playerAnimation.SwordAttack("JumpSwordAttack");
             }
             else
-            {
-                playerAnimation.returnSword();
-                playerState.swordDrawn = false;
+            { 
+                if (!hasInitiatedCombo1Availability && !hasInitiatedCombo2Availability && !hasInitiatedCombo3Availability)
+                {
+                    StartCoroutine(HasInitiatedCombo1Availability());
+                    playerAnimation.SwordAttack("SwordAttack1");
+                } else if (!hasInitiatedCombo2Availability && !hasInitiatedCombo3Availability)
+                {
+                    StartCoroutine(HasInitiatedCombo2Availability());
+                    playerAnimation.Combo2(hasInitiatedCombo2Availability);
+                } else if (!hasInitiatedCombo3Availability)
+                {
+                    StartCoroutine(HasInitiatedCombo3Availability());
+                    playerAnimation.Combo3(hasInitiatedCombo3Availability);
+                }
             }
+        } else if (Input.GetKeyDown(KeyCode.E) && canCastMagic)
+        {
+            playerAnimation.SwordAttack("EarthAttack1");
         }
+
     }
 
-    void SwordAttack1()
+
+
+
+    // --------------------------------------------------------------------------------
+    // Magic
+    // --------------------------------------------------------------------------------
+
+    void MagicAttack()
     {
-        if (Input.GetKeyDown(KeyCode.LeftControl) && playerState.hasWeapon)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && magicCooldownComplete)
         {
-            playerAnimation.SwordAttack1();
+            playerAnimation.SwordAttack("SwordAttack3");
+            playerState.castingMagic = true;
+            StartCoroutine(MagicCooldownRoutine());
         }
     }
 }

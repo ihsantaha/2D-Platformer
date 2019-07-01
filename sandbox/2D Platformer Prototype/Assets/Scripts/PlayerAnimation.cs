@@ -145,8 +145,27 @@ public class PlayerAnimation : MonoBehaviour
     }
 
 
-    public void SwordAttack1()
+    public void SwordAttack(string attackType)
     {
-        anim.SetTrigger("SwordAttack1");
+        anim.SetTrigger(attackType);
     }
+
+
+    public void Combo1(bool combo1)
+    {
+        anim.SetBool("Combo1", combo1);
+    }
+
+
+    public void Combo2(bool combo2)
+    {
+        anim.SetBool("Combo2", combo2);
+    }
+
+
+    public void Combo3(bool combo3)
+    {
+        anim.SetBool("Combo3", combo3);
+    }
+
 }
