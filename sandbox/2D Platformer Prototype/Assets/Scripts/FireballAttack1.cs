@@ -48,7 +48,7 @@ public class FireballAttack1 : MonoBehaviour {
     {
         if (!hitWallRight && !hitWallRight)
         {
-            transform.Translate(2.5f * Time.deltaTime * direction, 0, 0);
+            transform.Translate(4.5f * Time.deltaTime * direction, 0, 0);
         }
     }
 

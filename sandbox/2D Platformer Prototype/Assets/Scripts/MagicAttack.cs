@@ -8,6 +8,8 @@ public class MagicAttack : MonoBehaviour {
     // --------------------------------------------------------------------------------
  
     public GameObject fireball_1;
+    public float initialWaitTime;
+
     private Player player;
 
 
@@ -48,7 +50,7 @@ public class MagicAttack : MonoBehaviour {
 
     IEnumerator HasCastedFireballAttack1()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(player.IsGrounded() ? 0.45f : 0);
         Vector3 startingPosition = player.transform.position + new Vector3(1 * player.direction, 0, 0);
         Instantiate(fireball_1, startingPosition, player.transform.rotation);
     }
