@@ -318,7 +318,7 @@ GameObject:
   - component: {fileID: 68120278}
   m_Layer: 0
   m_Name: MagicAttack
-  m_TagString: Untagged
+  m_TagString: MagicAttack
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -332,8 +332,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1613933507}
+  m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -349,6 +348,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fireball_1: {fileID: 1631698218573030, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
+  quake_1: {fileID: 1944436676550128, guid: 9a13c06f2d2f35545913fd99ba53709c, type: 2}
+  quake_1_effects: {fileID: 1474336440497222, guid: 2df6257111f8e6f41ae853d20adf11b2,
+    type: 2}
+  angle: {x: 0, y: 0, z: 0, w: 0}
+  initialWaitTime: 0
+  direction: 0
 --- !u!1 &214169666
 GameObject:
   m_ObjectHideFlags: 0
@@ -19046,53 +19051,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!1001 &1613933506
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 68120277}
-    m_Modifications:
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 803.9841
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-      propertyPath: m_RootOrder
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: a04c2c5e39a2cd84daa28e08f693581f, type: 2}
-  m_IsPrefabAsset: 0
---- !u!4 &1613933507 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4087165632187926, guid: a04c2c5e39a2cd84daa28e08f693581f,
-    type: 2}
-  m_PrefabInternal: {fileID: 1613933506}
 --- !u!1001 &1644011368
 Prefab:
   m_ObjectHideFlags: 0
@@ -20927,7 +20885,7 @@ Tilemap:
       - {fileID: 21300004, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300002, guid: 87097277bcd33534c824e842d831dded, type: 3}
       - {fileID: 21300000, guid: 87097277bcd33534c824e842d831dded, type: 3}
-      m_AnimationSpeed: 12
+      m_AnimationSpeed: 12.000001
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   - first: {x: 9, y: 1, z: 0}
@@ -32811,7 +32769,7 @@ CompositeCollider2D:
   m_Density: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_UsedByEffector: 0
+  m_UsedByEffector: 1
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   m_GeometryType: 0

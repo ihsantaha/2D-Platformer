@@ -158,7 +158,6 @@ public class Player : MonoBehaviour
 
         canDrawWeapon = true;
         canCastMagic = true;
-        currentMagicType = "FireballAttack1";
         magicCooldownComplete = true;
 	}
 
@@ -1121,11 +1120,7 @@ public class Player : MonoBehaviour
                     playerAnimation.Combo3(hasInitiatedCombo3Availability);
                 }
             }
-        } else if (Input.GetKeyDown(KeyCode.E) && canCastMagic)
-        {
-            playerAnimation.SwordAttack("EarthAttack1");
         }
-
     }
 
 
@@ -1137,11 +1132,20 @@ public class Player : MonoBehaviour
 
     void MagicAttack()
     {
-        if (Input.GetKeyDown(KeyCode.LeftShift) && magicCooldownComplete)
+        if (canCastMagic && magicCooldownComplete)
         {
-            playerAnimation.SwordAttack("SwordAttack3");
-            playerState.castingMagic = true;
-            StartCoroutine(MagicCooldownRoutine());
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                currentMagicType = "FireballAttack1";
+                playerState.castingMagic = true;
+                StartCoroutine(MagicCooldownRoutine());
+            } else if (Input.GetKeyDown(KeyCode.E))
+            {
+                currentMagicType = "QuakeAttack1";
+                playerState.castingMagic = true;
+                StartCoroutine(MagicCooldownRoutine());
+            }
         }
     }
+
 }
