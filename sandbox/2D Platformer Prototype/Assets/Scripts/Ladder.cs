@@ -9,7 +9,7 @@ public class Ladder : MonoBehaviour
     // Fields
     // --------------------------------------------------------------------------------
 
-    private Rigidbody2D rB2D;
+    // private Rigidbody2D rB2D;
     private Player player;
 
     // --------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ public class Ladder : MonoBehaviour
 
     void Start()
     {
-        rB2D = GetComponent<Rigidbody2D>();
+        // rB2D = GetComponent<Rigidbody2D>();
         player = GameObject.FindWithTag("Player").GetComponent<Player>();
     }
 

@@ -10,6 +10,10 @@ TagManager:
   - GripCeiling
   - Water
   - WaterSpace
+  - Fireball_1
+  - MagicAttack
+  - Quake_1
+  - Quake_1_Effects
   layers:
   - Default
   - TransparentFX
@@ -26,7 +30,7 @@ TagManager:
   - CrawlSpace
   - GripCeiling
   - WaterSpace
-  - 
+  - RightLadder
   - 
   - 
   - 

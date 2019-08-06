@@ -58,7 +58,7 @@ public class Controller2D : RaycastController2D
 	public Vector2 playerInput;
     public float maxSlopeAngle = 80;
 
-    string current = "";
+    // string current = "";
 
 
 
